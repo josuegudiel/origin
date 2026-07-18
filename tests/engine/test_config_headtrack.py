@@ -50,7 +50,20 @@ def test_opentrack_host_dangerous_rejected(host):
         cfgmod.OpenTrackSettings(host=host)
 
 
-@pytest.mark.parametrize("host", ["127.0.0.1", "localhost", "192.168.1.5"])
+@pytest.mark.parametrize(
+    "host",
+    ["8.8.8.8", "evil.example.com", "attacker.io", "1.2.3.4"],
+)
+def test_opentrack_host_public_internet_rejected(host):
+    # SEGURIDAD: el stream de pose no debe poder salir de loopback/LAN.
+    with pytest.raises(Exception):
+        cfgmod.OpenTrackSettings(host=host)
+
+
+@pytest.mark.parametrize(
+    "host",
+    ["127.0.0.1", "localhost", "192.168.1.5", "10.0.0.7", "gaming-pc", "mi-pc.local"],
+)
 def test_opentrack_host_legit_accepted(host):
     assert cfgmod.OpenTrackSettings(host=host).host == host
 

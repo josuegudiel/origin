@@ -262,8 +262,10 @@ class HeadTracker:
             return
         self._stop.clear()
         self._thread = threading.Thread(target=self._loop, daemon=True, name="head-track")
-        self._thread.start()
+        # "starting" ANTES de lanzar el thread: si no, el worker puede emitir
+        # "running" primero y los subscriptores ven los estados fuera de orden.
         self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "starting"})
+        self._thread.start()
 
     def stop(self) -> None:
         self._stop.set()

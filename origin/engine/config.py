@@ -127,12 +127,27 @@ class OpenTrackSettings(BaseModel):
     @field_validator("host")
     @classmethod
     def _host_safe(cls, v: str) -> str:
-        # SEGURIDAD: la pose de cabeza sale por UDP a host:port. Restringir a
-        # loopback/LAN por default evita mandar el stream a un host arbitrario
-        # de Internet desde un perfil compartido. Se acepta hostname o IP.
-        if not v or "/" in v or "\\" in v or ":" in v:
+        # SEGURIDAD: la pose de cabeza sale por UDP a host:port. Solo se aceptan
+        # destinos de loopback/LAN — IP privada/link-local, 'localhost', nombre
+        # de máquina sin puntos (ej. 'gaming-pc') o mDNS '*.local'/'*.lan' — para
+        # que una config editada/importada no pueda exfiltrar el stream a un
+        # host arbitrario de Internet.
+        import ipaddress
+
+        host = v.lower()
+        if not host or any(ch in host for ch in "/\\:@ "):
             raise ValueError(f"host inválido: '{v}'")
-        return v
+        try:
+            ip = ipaddress.ip_address(host)
+        except ValueError:
+            if host == "localhost" or "." not in host or host.endswith((".local", ".lan")):
+                return host
+            raise ValueError(
+                f"host '{v}' parece un dominio público — usá loopback o una IP/nombre de LAN"
+            ) from None
+        if not (ip.is_loopback or ip.is_private or ip.is_link_local):
+            raise ValueError(f"host '{v}' es una IP pública — solo loopback o LAN")
+        return host
 
 
 class GestureBinding(BaseModel):

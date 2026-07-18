@@ -1,0 +1,40 @@
+# Recurso de versión de Windows para Origin.exe (formato VSVersionInfo de
+# PyInstaller). Un .exe sin metadatos de versión/compañía dispara más
+# heurísticas de antivirus/SmartScreen que uno con recurso completo — esto no
+# reemplaza la firma de código, pero reduce falsos positivos.
+# Mantener en sync con pyproject.toml / origin/__init__.py / origin.iss.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(0, 3, 0, 0),
+    prodvers=(0, 3, 0, 0),
+    mask=0x3F,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0),
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          "040A04B0",
+          [
+            StringStruct("CompanyName", "Origin"),
+            StringStruct(
+                "FileDescription",
+                "Origin - control por voz y head tracking para Star Citizen",
+            ),
+            StringStruct("FileVersion", "0.3.0.0"),
+            StringStruct("InternalName", "Origin"),
+            StringStruct("OriginalFilename", "Origin.exe"),
+            StringStruct("ProductName", "Origin"),
+            StringStruct("ProductVersion", "0.3.0.0"),
+            StringStruct("LegalCopyright", "(c) Origin. Software local: no recolecta ni envia datos."),
+          ],
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct("Translation", [0x040A, 1200])]),
+  ],
+)
