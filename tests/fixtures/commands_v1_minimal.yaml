@@ -1,0 +1,14 @@
+version: 1
+settings:
+  ptt_key: f12
+  whisper_model: small
+  whisper_device: auto
+  language: es
+  fuzz_threshold: 75
+commands:
+  - id: request_landing
+    phrases: ["pide hangar", "solicita aterrizaje"]
+    keys: ["alt+n"]
+  - id: toggle_lights
+    phrases: ["luces"]
+    keys: ["l"]

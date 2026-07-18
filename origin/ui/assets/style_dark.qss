@@ -1,0 +1,57 @@
+QWidget {
+    font-family: "Segoe UI", "Inter", "Helvetica Neue", sans-serif;
+    font-size: 10pt;
+    color: #e0e0e6;
+    background-color: #1d1d22;
+}
+QMainWindow, QDialog { background-color: #1d1d22; }
+QListWidget#sidebar {
+    background: #25252b;
+    border: none;
+    padding: 4px;
+}
+QListWidget#sidebar::item {
+    padding: 10px 14px;
+    border-radius: 6px;
+}
+QListWidget#sidebar::item:selected {
+    background: #3a4a80;
+    color: #ffffff;
+}
+QPushButton {
+    background: #2c2c34;
+    border: 1px solid #44444c;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: #e0e0e6;
+}
+QPushButton:hover { background: #3a3a44; }
+QPushButton:pressed { background: #3a4a80; }
+QLineEdit, QPlainTextEdit, QListView, QTableView, QComboBox, QSpinBox {
+    background: #2a2a30;
+    border: 1px solid #44444c;
+    padding: 4px;
+    border-radius: 4px;
+    color: #e0e0e6;
+}
+QGroupBox {
+    border: 1px solid #383840;
+    border-radius: 6px;
+    margin-top: 12px;
+    padding-top: 8px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+    color: #a0a0aa;
+}
+#StatusDot[state="ready"]    { color: #4ed178; }
+#StatusDot[state="paused"]   { color: #888896; }
+#StatusDot[state="recording"], #StatusDot[state="transcribing"], #StatusDot[state="executing"] { color: #f0c040; }
+#StatusDot[state="loading_model"] { color: #80a0ff; }
+#StatusDot[state="error"]    { color: #e06060; }
+#Banner          { padding: 8px; border-radius: 4px; }
+#Banner[kind="error"]   { background: #4a1d1d; color: #ff9090; }
+#Banner[kind="info"]    { background: #1d3060; color: #b0c8ff; }
+#Banner[kind="success"] { background: #1d4030; color: #90e8a0; }

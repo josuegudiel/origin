@@ -1,0 +1,22 @@
+version: 2
+settings:
+  active_profile: flight
+profiles:
+  - id: flight
+    label_es: "Vuelo"
+    label_en: "Flight"
+    commands:
+      - id: request_landing
+        phrases_es: ["pide hangar"]
+        phrases_en: ["request landing"]
+        keys: ["alt+n"]
+        label_es: "Pedir hangar"
+        label_en: "Request landing"
+  - id: fps
+    label_es: "FPS"
+    label_en: "FPS"
+    commands:
+      - id: reload
+        phrases_es: ["recarga"]
+        phrases_en: ["reload"]
+        keys: ["r"]

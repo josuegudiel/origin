@@ -1,0 +1,1357 @@
+# Preset bilingüe v0.3 para Origin — Star Citizen 4.x.
+# Las teclas son binds default; verificalos contra los tuyos desde
+# RSI Keybindings y ajustalos desde el dashboard o editando este YAML.
+# Frases en ES son las que un piloto realmente dice — no traducciones literales.
+version: 3
+settings:
+  ptt_key: f12
+  profile_switch_hotkey: ctrl+f12
+  ui_language: es
+  active_profile: flight
+  whisper_model: small
+  whisper_device: auto
+  whisper_compute_type: auto
+  active_language: es
+  fuzz_threshold: 75
+  mic_device: null
+  sample_rate: 16000
+  max_record_seconds: 8
+  inter_key_delay_ms: 30
+  log_format: pretty
+  start_minimized: false
+  autostart_windows: false
+  theme: system
+  tts:
+    enabled: true
+    voice_es: "es_ES-mls_10246-low"
+    voice_en: "en_US-amy-low"
+    default_response_when_no_say: true
+    cancel_on_ptt: true
+    speed: 1.0
+    volume: 1.0
+  hotas:
+    enabled: false
+    button_binding: null
+    poll_hz: 60
+  llm:
+    enabled: false
+    base_url: "http://localhost:11434"
+    model: "llama3.1:8b"
+    timeout_ms: 8000
+    floor_score: 60
+    temperature: 0.2
+    max_commands_per_resolution: 5
+
+profiles:
+
+  # ============================================================
+  # FLIGHT — ~50 comandos de vuelo y combate básico
+  # ============================================================
+  - id: flight
+    label_es: "Vuelo"
+    label_en: "Flight"
+    description_es: "Combate y vuelo espacial."
+    description_en: "Spaceflight and combat."
+    commands:
+      - id: request_landing
+        phrases_es: ["pide hangar", "solicita aterrizaje", "pide aterrizar"]
+        phrases_en: ["request landing", "request hangar"]
+        keys: ["alt+n"]
+        label_es: "Pedir hangar"
+        label_en: "Request landing"
+      - id: toggle_gear
+        phrases_es: ["tren", "saca tren", "tren de aterrizaje"]
+        phrases_en: ["gear", "landing gear"]
+        keys: ["n"]
+        label_es: "Tren de aterrizaje"
+        label_en: "Landing gear"
+      - id: toggle_lights
+        phrases_es: ["luces", "enciende luces", "apaga luces"]
+        phrases_en: ["lights", "headlights"]
+        keys: ["l"]
+        label_es: "Luces"
+        label_en: "Lights"
+      - id: power_all
+        phrases_es: ["enciende todo", "power on", "todos los sistemas"]
+        phrases_en: ["power all", "power on"]
+        keys: ["u"]
+        label_es: "Power all"
+        label_en: "Power all"
+      - id: power_off
+        phrases_es: ["apaga todo", "power off"]
+        phrases_en: ["power off", "shutdown"]
+        keys: ["alt+u"]
+        label_es: "Power off"
+        label_en: "Power off"
+      - id: power_weapons
+        phrases_es: ["energiza armas", "power armas"]
+        phrases_en: ["power weapons"]
+        keys: ["p"]
+        label_es: "Armas on/off"
+        label_en: "Weapons power"
+      - id: power_shields
+        phrases_es: ["escudos", "power escudos", "energiza escudos"]
+        phrases_en: ["power shields", "shields"]
+        keys: ["o"]
+        label_es: "Escudos on/off"
+        label_en: "Shields power"
+      - id: power_engines
+        phrases_es: ["motores", "power motores"]
+        phrases_en: ["power engines", "engines"]
+        keys: ["i"]
+        label_es: "Motores on/off"
+        label_en: "Engines power"
+      - id: power_triangle_weapons
+        phrases_es: ["potencia armas", "todo a armas"]
+        phrases_en: ["power to weapons", "weapons priority"]
+        keys: ["f5"]
+        label_es: "Triángulo armas"
+        label_en: "Power triangle weapons"
+      - id: power_triangle_shields
+        phrases_es: ["potencia escudos", "todo a escudos"]
+        phrases_en: ["power to shields", "shields priority"]
+        keys: ["f6"]
+        label_es: "Triángulo escudos"
+        label_en: "Power triangle shields"
+      - id: power_triangle_engines
+        phrases_es: ["potencia motores", "todo a motores"]
+        phrases_en: ["power to engines", "engines priority"]
+        keys: ["f7"]
+        label_es: "Triángulo motores"
+        label_en: "Power triangle engines"
+      - id: power_triangle_reset
+        phrases_es: ["reset triángulo", "equilibra potencia"]
+        phrases_en: ["reset triangle", "balance power"]
+        keys: ["f8"]
+        label_es: "Reset triángulo"
+        label_en: "Reset triangle"
+      - id: cruise_control
+        phrases_es: ["cruise", "control de crucero"]
+        phrases_en: ["cruise control", "cruise"]
+        keys: ["c"]
+        label_es: "Cruise control"
+        label_en: "Cruise control"
+      - id: decouple
+        phrases_es: ["desacopla", "modo libre", "decouple"]
+        phrases_en: ["decouple", "decoupled"]
+        keys: ["v"]
+        label_es: "Decouple"
+        label_en: "Decouple"
+      - id: gimbal_lock
+        phrases_es: ["bloqueo gimbal", "gimbal lock"]
+        phrases_en: ["gimbal lock"]
+        keys: ["g"]
+        label_es: "Gimbal lock"
+        label_en: "Gimbal lock"
+      - id: gimbal_auto
+        phrases_es: ["gimbal automático", "auto gimbal"]
+        phrases_en: ["auto gimbal"]
+        keys: ["r"]
+        label_es: "Auto gimbal"
+        label_en: "Auto gimbal"
+      - id: master_modes
+        phrases_es: ["cambia modo", "master modes"]
+        phrases_en: ["master modes", "switch mode"]
+        keys: ["b"]
+        label_es: "Master modes"
+        label_en: "Master modes"
+      - id: scan_mode
+        phrases_es: ["modo escaneo", "escaneo"]
+        phrases_en: ["scan mode", "scan"]
+        keys: ["v"]
+        label_es: "Modo escaneo"
+        label_en: "Scan mode"
+      - id: scan_ping
+        phrases_es: ["ping", "escanea ping", "manda ping"]
+        phrases_en: ["ping", "send ping"]
+        keys: ["tab"]
+        label_es: "Ping"
+        label_en: "Ping"
+      - id: target_nearest_hostile
+        phrases_es: ["enemigo más cercano", "target hostil"]
+        phrases_en: ["nearest hostile", "target hostile"]
+        keys: ["t"]
+        label_es: "Target hostil"
+        label_en: "Target hostile"
+      - id: target_pin_1
+        phrases_es: ["pin uno", "target uno"]
+        phrases_en: ["pin one", "target one"]
+        keys: ["alt+1"]
+        label_es: "Pin 1"
+        label_en: "Pin 1"
+      - id: target_pin_2
+        phrases_es: ["pin dos", "target dos"]
+        phrases_en: ["pin two", "target two"]
+        keys: ["alt+2"]
+        label_es: "Pin 2"
+        label_en: "Pin 2"
+      - id: target_pin_3
+        phrases_es: ["pin tres", "target tres"]
+        phrases_en: ["pin three", "target three"]
+        keys: ["alt+3"]
+        label_es: "Pin 3"
+        label_en: "Pin 3"
+      - id: clear_target
+        phrases_es: ["limpia target", "deselecciona"]
+        phrases_en: ["clear target", "deselect"]
+        keys: ["alt+t"]
+        label_es: "Clear target"
+        label_en: "Clear target"
+      - id: missile_mode
+        phrases_es: ["modo misiles", "misiles"]
+        phrases_en: ["missile mode", "missile op"]
+        keys: ["m"]
+        label_es: "Modo misiles"
+        label_en: "Missile mode"
+      - id: fire_missile
+        phrases_es: ["lanza misil", "dispara misil"]
+        phrases_en: ["fire missile", "launch missile"]
+        keys: ["enter"]
+        label_es: "Lanzar misil"
+        label_en: "Fire missile"
+      - id: countermeasures
+        phrases_es: ["contramedidas", "chaff", "señuelos"]
+        phrases_en: ["countermeasures", "chaff", "flare"]
+        keys: ["g"]
+        label_es: "Contramedidas"
+        label_en: "Countermeasures"
+      - id: countermeasures_noise
+        phrases_es: ["ruido", "noise"]
+        phrases_en: ["noise", "decoy noise"]
+        keys: ["x"]
+        label_es: "Noise"
+        label_en: "Noise"
+      - id: full_stop
+        phrases_es: ["frena", "stop", "full stop"]
+        phrases_en: ["full stop", "stop"]
+        keys: ["x"]
+        label_es: "Full stop"
+        label_en: "Full stop"
+      - id: speed_limiter_up
+        phrases_es: ["acelera", "más velocidad", "speed up"]
+        phrases_en: ["speed up", "increase limiter"]
+        keys: ["equal"]
+        label_es: "Subir limiter"
+        label_en: "Speed up"
+      - id: speed_limiter_down
+        phrases_es: ["frena más", "menos velocidad", "speed down"]
+        phrases_en: ["speed down", "decrease limiter"]
+        keys: ["minus"]
+        label_es: "Bajar limiter"
+        label_en: "Speed down"
+      - id: vtol
+        phrases_es: ["vtol", "modo vertical"]
+        phrases_en: ["vtol", "vertical mode"]
+        keys: ["k"]
+        label_es: "VTOL"
+        label_en: "VTOL"
+      - id: autoland
+        phrases_es: ["aterriza solo", "autoland", "auto aterrizaje"]
+        phrases_en: ["autoland", "auto landing"]
+        keys: ["alt+n"]
+        label_es: "Autoland"
+        label_en: "Autoland"
+      - id: open_doors
+        phrases_es: ["abre puertas", "abre nave"]
+        phrases_en: ["open doors", "open ship"]
+        keys: ["alt+k"]
+        label_es: "Abrir puertas"
+        label_en: "Open doors"
+      - id: close_doors
+        phrases_es: ["cierra puertas", "cierra nave"]
+        phrases_en: ["close doors", "close ship"]
+        keys: ["alt+l"]
+        label_es: "Cerrar puertas"
+        label_en: "Close doors"
+      - id: lock_doors
+        phrases_es: ["traba puertas", "bloquea nave"]
+        phrases_en: ["lock doors", "secure ship"]
+        keys: ["alt+y"]
+        label_es: "Bloquear puertas"
+        label_en: "Lock doors"
+      - id: self_destruct
+        phrases_es: ["autodestrucción", "self destruct"]
+        phrases_en: ["self destruct"]
+        keys: ["backspace"]
+        label_es: "Autodestruir"
+        label_en: "Self destruct"
+        description_es: "Hold 5 segundos en SC. Acá manda 1 pulsación; ajustá si querés hold_ms."
+        description_en: "Holds 5s in SC. Sends 1 tap; adjust with hold_ms if needed."
+      - id: eject
+        phrases_es: ["eyectar", "eyección"]
+        phrases_en: ["eject"]
+        keys: ["y", "y"]
+        label_es: "Eyectar"
+        label_en: "Eject"
+      - id: emergency_exit
+        phrases_es: ["salida emergencia", "abandona nave"]
+        phrases_en: ["emergency exit", "abandon ship"]
+        keys: ["u"]
+        label_es: "Salir nave"
+        label_en: "Exit ship"
+      - id: drift
+        phrases_es: ["drift", "deriva", "flota"]
+        phrases_en: ["drift"]
+        keys: ["c"]
+        label_es: "Drift"
+        label_en: "Drift"
+      - id: esp_toggle
+        phrases_es: ["esp", "asistencia precisión"]
+        phrases_en: ["esp toggle", "precision assist"]
+        keys: ["6"]
+        label_es: "ESP on/off"
+        label_en: "ESP toggle"
+      - id: weapon_group_1
+        phrases_es: ["grupo uno", "armas uno"]
+        phrases_en: ["weapon group one", "group one"]
+        keys: ["1"]
+        label_es: "Grupo 1"
+        label_en: "Group 1"
+      - id: weapon_group_2
+        phrases_es: ["grupo dos", "armas dos"]
+        phrases_en: ["weapon group two", "group two"]
+        keys: ["2"]
+        label_es: "Grupo 2"
+        label_en: "Group 2"
+      - id: weapon_group_3
+        phrases_es: ["grupo tres", "armas tres"]
+        phrases_en: ["weapon group three", "group three"]
+        keys: ["3"]
+        label_es: "Grupo 3"
+        label_en: "Group 3"
+      - id: nav_mode
+        phrases_es: ["modo nav", "navegación"]
+        phrases_en: ["nav mode", "navigation"]
+        keys: ["b"]
+        label_es: "Nav mode"
+        label_en: "Nav mode"
+      - id: scm_mode
+        phrases_es: ["modo combate", "scm"]
+        phrases_en: ["combat mode", "scm"]
+        keys: ["b"]
+        label_es: "SCM"
+        label_en: "SCM"
+      - id: turret_mode
+        phrases_es: ["torreta", "modo torreta"]
+        phrases_en: ["turret mode", "operator"]
+        keys: ["alt+t"]
+        label_es: "Torreta"
+        label_en: "Turret"
+      - id: lock_pitch_yaw
+        phrases_es: ["bloquea pitch", "lock pitch"]
+        phrases_en: ["lock pitch", "lock yaw"]
+        keys: ["alt+g"]
+        label_es: "Lock pitch/yaw"
+        label_en: "Lock pitch/yaw"
+      - id: g_safe_off
+        phrases_es: ["sin g safe", "desactiva g safe"]
+        phrases_en: ["g safe off"]
+        keys: ["alt+capslock"]
+        label_es: "G-safe off"
+        label_en: "G-safe off"
+      - id: lights_strobe
+        phrases_es: ["estrobo", "strobe"]
+        phrases_en: ["strobe", "flash lights"]
+        keys: ["alt+l"]
+        label_es: "Strobe"
+        label_en: "Strobe"
+      - id: report_radar
+        phrases_es: ["info radar", "radar info"]
+        phrases_en: ["radar info", "scan info"]
+        keys: ["alt+s"]
+        label_es: "Info radar"
+        label_en: "Radar info"
+
+  # ============================================================
+  # MOBIGLAS — 18 comandos de UI personal
+  # ============================================================
+  - id: mobiglas
+    label_es: "Mobiglas"
+    label_en: "Mobiglas"
+    description_es: "Interfaz personal y apps del piloto."
+    description_en: "Player UI and pilot apps."
+    commands:
+      - id: open_mobiglas
+        phrases_es: ["abre mobiglas", "mobiglas"]
+        phrases_en: ["open mobiglas", "mobiglas"]
+        keys: ["f1"]
+        label_es: "Abrir mobiglas"
+        label_en: "Open mobiglas"
+      - id: starmap
+        phrases_es: ["mapa estelar", "starmap", "abre mapa"]
+        phrases_en: ["starmap", "star map", "open map"]
+        keys: ["f2"]
+        label_es: "Mapa estelar"
+        label_en: "Starmap"
+      - id: inventory
+        phrases_es: ["inventario", "abre inventario"]
+        phrases_en: ["inventory", "open inventory"]
+        keys: ["i"]
+        label_es: "Inventario"
+        label_en: "Inventory"
+      - id: chat
+        phrases_es: ["chat", "abre chat"]
+        phrases_en: ["chat", "open chat"]
+        keys: ["enter"]
+        label_es: "Chat"
+        label_en: "Chat"
+      - id: comms
+        phrases_es: ["comms", "comunicaciones"]
+        phrases_en: ["comms", "communications"]
+        keys: ["f11"]
+        label_es: "Comms"
+        label_en: "Comms"
+      - id: contacts
+        phrases_es: ["contactos", "amigos"]
+        phrases_en: ["contacts", "friends"]
+        keys: ["f1"]
+        label_es: "Contactos"
+        label_en: "Contacts"
+      - id: missions
+        phrases_es: ["misiones", "manager misiones"]
+        phrases_en: ["missions", "mission manager"]
+        keys: ["f1"]
+        label_es: "Misiones"
+        label_en: "Missions"
+      - id: vehicle_manager
+        phrases_es: ["mis naves", "vehículos"]
+        phrases_en: ["my ships", "vehicles", "vehicle manager"]
+        keys: ["f1"]
+        label_es: "Mis naves"
+        label_en: "My ships"
+      - id: journal
+        phrases_es: ["diario", "journal"]
+        phrases_en: ["journal", "diary"]
+        keys: ["f1"]
+        label_es: "Journal"
+        label_en: "Journal"
+      - id: vma
+        phrases_es: ["vma", "asset manager"]
+        phrases_en: ["vma", "asset manager"]
+        keys: ["f1"]
+        label_es: "VMA"
+        label_en: "VMA"
+      - id: skip_intro
+        phrases_es: ["skip", "salta intro"]
+        phrases_en: ["skip", "skip intro"]
+        keys: ["esc"]
+        label_es: "Skip"
+        label_en: "Skip"
+      - id: screenshot
+        phrases_es: ["captura", "screenshot", "foto"]
+        phrases_en: ["screenshot", "capture"]
+        keys: ["printscreen"]
+        label_es: "Captura"
+        label_en: "Screenshot"
+      - id: emote_wave
+        phrases_es: ["saluda", "wave"]
+        phrases_en: ["wave", "say hi"]
+        keys: ["alt+1"]
+        label_es: "Saludar"
+        label_en: "Wave"
+      - id: emote_salute
+        phrases_es: ["salud militar", "salute"]
+        phrases_en: ["salute"]
+        keys: ["alt+2"]
+        label_es: "Salute"
+        label_en: "Salute"
+      - id: emote_dance
+        phrases_es: ["baila", "dance"]
+        phrases_en: ["dance"]
+        keys: ["alt+3"]
+        label_es: "Dance"
+        label_en: "Dance"
+      - id: emote_point
+        phrases_es: ["señala", "point"]
+        phrases_en: ["point"]
+        keys: ["alt+4"]
+        label_es: "Point"
+        label_en: "Point"
+      - id: voice_chat
+        phrases_es: ["push voz", "voice"]
+        phrases_en: ["push to talk", "voice"]
+        keys: ["capslock"]
+        label_es: "Voice chat"
+        label_en: "Voice chat"
+      - id: mobiglas_close
+        phrases_es: ["cierra mobiglas", "guarda mobiglas"]
+        phrases_en: ["close mobiglas"]
+        keys: ["esc"]
+        label_es: "Cerrar mobiglas"
+        label_en: "Close mobiglas"
+
+  # ============================================================
+  # FPS — 25 comandos a pie
+  # ============================================================
+  - id: fps
+    label_es: "FPS"
+    label_en: "FPS"
+    description_es: "Comandos a pie."
+    description_en: "On-foot commands."
+    commands:
+      - id: reload
+        phrases_es: ["recarga", "recargar"]
+        phrases_en: ["reload"]
+        keys: ["r"]
+        label_es: "Recargar"
+        label_en: "Reload"
+      - id: crouch
+        phrases_es: ["agáchate", "crouch"]
+        phrases_en: ["crouch"]
+        keys: ["c"]
+        label_es: "Agacharse"
+        label_en: "Crouch"
+      - id: prone
+        phrases_es: ["tumbado", "prone"]
+        phrases_en: ["prone"]
+        keys: ["x"]
+        label_es: "Tumbarse"
+        label_en: "Prone"
+      - id: jump
+        phrases_es: ["salta", "jump"]
+        phrases_en: ["jump"]
+        keys: ["space"]
+        label_es: "Saltar"
+        label_en: "Jump"
+      - id: melee
+        phrases_es: ["puñetazo", "melee"]
+        phrases_en: ["melee", "punch"]
+        keys: ["f"]
+        label_es: "Melee"
+        label_en: "Melee"
+      - id: interact
+        phrases_es: ["interactúa", "usar"]
+        phrases_en: ["interact", "use"]
+        keys: ["f"]
+        label_es: "Interactuar"
+        label_en: "Interact"
+      - id: pickup
+        phrases_es: ["recoge", "recoger"]
+        phrases_en: ["pickup", "pick up"]
+        keys: ["f"]
+        label_es: "Recoger"
+        label_en: "Pickup"
+      - id: holster
+        phrases_es: ["guarda arma", "enfunda"]
+        phrases_en: ["holster"]
+        keys: ["r"]
+        label_es: "Enfundar"
+        label_en: "Holster"
+      - id: switch_primary
+        phrases_es: ["arma primaria", "primaria"]
+        phrases_en: ["primary weapon", "primary"]
+        keys: ["1"]
+        label_es: "Primaria"
+        label_en: "Primary"
+      - id: switch_secondary
+        phrases_es: ["arma secundaria", "secundaria"]
+        phrases_en: ["secondary weapon", "secondary"]
+        keys: ["2"]
+        label_es: "Secundaria"
+        label_en: "Secondary"
+      - id: switch_pistol
+        phrases_es: ["pistola", "sidearm"]
+        phrases_en: ["pistol", "sidearm"]
+        keys: ["3"]
+        label_es: "Pistola"
+        label_en: "Pistol"
+      - id: switch_knife
+        phrases_es: ["cuchillo", "knife"]
+        phrases_en: ["knife"]
+        keys: ["4"]
+        label_es: "Cuchillo"
+        label_en: "Knife"
+      - id: throw_grenade
+        phrases_es: ["granada", "tira granada"]
+        phrases_en: ["grenade", "throw grenade"]
+        keys: ["5"]
+        label_es: "Granada"
+        label_en: "Grenade"
+      - id: med_gun
+        phrases_es: ["medi gun", "medkit"]
+        phrases_en: ["medi gun", "medkit"]
+        keys: ["6"]
+        label_es: "Medi-gun"
+        label_en: "Medi-gun"
+      - id: scope
+        phrases_es: ["mira", "zoom", "scope"]
+        phrases_en: ["scope", "zoom"]
+        keys: ["alt+z"]
+        label_es: "Mira (rebindear)"
+        label_en: "Scope (rebind)"
+        description_es: "SC usa mouse_right; bindealo a esta tecla en SC keybindings."
+        description_en: "SC uses mouse_right by default; bind this key in SC keybindings."
+      - id: fire_mode
+        phrases_es: ["modo disparo", "fire mode"]
+        phrases_en: ["fire mode"]
+        keys: ["b"]
+        label_es: "Fire mode"
+        label_en: "Fire mode"
+      - id: lean_left
+        phrases_es: ["asoma izquierda", "lean left"]
+        phrases_en: ["lean left"]
+        keys: ["q"]
+        label_es: "Lean L"
+        label_en: "Lean L"
+      - id: lean_right
+        phrases_es: ["asoma derecha", "lean right"]
+        phrases_en: ["lean right"]
+        keys: ["e"]
+        label_es: "Lean R"
+        label_en: "Lean R"
+      - id: flashlight
+        phrases_es: ["linterna", "flashlight"]
+        phrases_en: ["flashlight", "torch"]
+        keys: ["t"]
+        label_es: "Linterna"
+        label_en: "Flashlight"
+      - id: helmet_toggle
+        phrases_es: ["casco", "ponte casco", "quita casco"]
+        phrases_en: ["helmet", "toggle helmet"]
+        keys: ["alt+h"]
+        label_es: "Casco on/off"
+        label_en: "Toggle helmet"
+      - id: heal_self
+        phrases_es: ["cúrate", "medkit self"]
+        phrases_en: ["heal self", "use medkit"]
+        keys: ["c"]
+        label_es: "Curar self"
+        label_en: "Heal self"
+      - id: oxygen_check
+        phrases_es: ["oxígeno", "cuánto aire", "check oxígeno"]
+        phrases_en: ["oxygen", "air check"]
+        keys: ["f1"]
+        label_es: "Check oxígeno"
+        label_en: "Check oxygen"
+      - id: ammo_check
+        phrases_es: ["munición", "cuanta bala"]
+        phrases_en: ["ammo check", "ammo"]
+        keys: ["f1"]
+        label_es: "Check ammo"
+        label_en: "Check ammo"
+      - id: salute_emote
+        phrases_es: ["saludo militar", "salute"]
+        phrases_en: ["salute emote"]
+        keys: ["alt+2"]
+        label_es: "Salute"
+        label_en: "Salute"
+      - id: drop_weapon
+        phrases_es: ["tira arma", "drop weapon"]
+        phrases_en: ["drop weapon"]
+        keys: ["x"]
+        label_es: "Drop weapon"
+        label_en: "Drop weapon"
+
+  # ============================================================
+  # EVA — 12 comandos extravehiculares
+  # ============================================================
+  - id: eva
+    label_es: "EVA"
+    label_en: "EVA"
+    description_es: "Actividad extravehicular."
+    description_en: "Extravehicular activity."
+    commands:
+      - id: eva_jets
+        phrases_es: ["propulsores", "jets eva"]
+        phrases_en: ["jets", "thrusters"]
+        keys: ["b"]
+        label_es: "Propulsores EVA"
+        label_en: "EVA jets"
+      - id: eva_boost
+        phrases_es: ["impulso", "boost eva"]
+        phrases_en: ["boost", "eva boost"]
+        keys: ["shift"]
+        label_es: "EVA boost"
+        label_en: "EVA boost"
+      - id: eva_orient
+        phrases_es: ["orienta", "endereza"]
+        phrases_en: ["orient", "stabilize"]
+        keys: ["c"]
+        label_es: "Orient"
+        label_en: "Orient"
+      - id: eva_brake
+        phrases_es: ["frena eva", "alto"]
+        phrases_en: ["brake", "stop eva"]
+        keys: ["x"]
+        label_es: "Frenar EVA"
+        label_en: "EVA brake"
+      - id: eva_helmet
+        phrases_es: ["casco eva", "toggle casco"]
+        phrases_en: ["eva helmet"]
+        keys: ["alt+h"]
+        label_es: "Casco EVA"
+        label_en: "EVA helmet"
+      - id: eva_lights
+        phrases_es: ["luces traje", "suit lights"]
+        phrases_en: ["suit lights"]
+        keys: ["l"]
+        label_es: "Luces traje"
+        label_en: "Suit lights"
+      - id: eva_grab
+        phrases_es: ["agarra", "grab eva"]
+        phrases_en: ["grab", "grapple"]
+        keys: ["f"]
+        label_es: "Grab"
+        label_en: "Grab"
+      - id: eva_release
+        phrases_es: ["suelta", "release eva"]
+        phrases_en: ["release", "let go"]
+        keys: ["f"]
+        label_es: "Release"
+        label_en: "Release"
+      - id: eva_back_to_ship
+        phrases_es: ["vuelve a nave", "back to ship"]
+        phrases_en: ["back to ship"]
+        keys: ["f"]
+        label_es: "Back to ship"
+        label_en: "Back to ship"
+      - id: oxygen_status
+        phrases_es: ["estado oxígeno", "info aire"]
+        phrases_en: ["oxygen status"]
+        keys: ["f1"]
+        label_es: "Oxígeno status"
+        label_en: "Oxygen status"
+      - id: suit_power
+        phrases_es: ["traje power", "energía traje"]
+        phrases_en: ["suit power"]
+        keys: ["alt+p"]
+        label_es: "Suit power"
+        label_en: "Suit power"
+      - id: comms_ship
+        phrases_es: ["habla con nave", "comms nave"]
+        phrases_en: ["call ship", "ship comms"]
+        keys: ["f11"]
+        label_es: "Comms nave"
+        label_en: "Ship comms"
+
+  # ============================================================
+  # MINING — 15 comandos de minería
+  # ============================================================
+  - id: mining
+    label_es: "Minería"
+    label_en: "Mining"
+    description_es: "Cabezal de minería, modos y consumibles."
+    description_en: "Mining head modes and consumables."
+    commands:
+      - id: mining_mode
+        phrases_es: ["modo minería", "minería"]
+        phrases_en: ["mining mode", "mining"]
+        keys: ["m"]
+        label_es: "Modo minería"
+        label_en: "Mining mode"
+      - id: scan_mode_mining
+        phrases_es: ["escaneo minería", "scan minería"]
+        phrases_en: ["mining scan"]
+        keys: ["v"]
+        label_es: "Scan minería"
+        label_en: "Mining scan"
+      - id: switch_module_next
+        phrases_es: ["siguiente módulo", "cambia gadget"]
+        phrases_en: ["next module", "next gadget"]
+        keys: ["g"]
+        label_es: "Próximo módulo"
+        label_en: "Next module"
+      - id: switch_module_prev
+        phrases_es: ["módulo anterior", "previo gadget"]
+        phrases_en: ["previous module"]
+        keys: ["shift+g"]
+        label_es: "Módulo anterior"
+        label_en: "Previous module"
+      - id: deploy_gadget
+        phrases_es: ["lanza gadget", "consumible"]
+        phrases_en: ["deploy gadget", "throw consumable"]
+        keys: ["c"]
+        label_es: "Lanzar gadget"
+        label_en: "Deploy gadget"
+      - id: laser_power_up
+        phrases_es: ["más potencia", "sube potencia láser"]
+        phrases_en: ["power up laser", "more power"]
+        keys: ["v"]
+        label_es: "Potencia +"
+        label_en: "Power up"
+      - id: laser_power_down
+        phrases_es: ["menos potencia", "baja potencia láser"]
+        phrases_en: ["power down laser", "less power"]
+        keys: ["c"]
+        label_es: "Potencia -"
+        label_en: "Power down"
+      - id: fracture_mode
+        phrases_es: ["modo fractura", "fractura"]
+        phrases_en: ["fracture mode", "fracture"]
+        keys: ["alt+1"]
+        label_es: "Modo fractura"
+        label_en: "Fracture mode"
+      - id: extract_mode
+        phrases_es: ["modo extracción", "extrae"]
+        phrases_en: ["extract mode", "extraction"]
+        keys: ["alt+2"]
+        label_es: "Modo extracción"
+        label_en: "Extract mode"
+      - id: jettison_cargo
+        phrases_es: ["tira carga", "jettison"]
+        phrases_en: ["jettison cargo", "dump cargo"]
+        keys: ["alt+j"]
+        label_es: "Jettison"
+        label_en: "Jettison"
+      - id: report_deposit
+        phrases_es: ["info depósito", "datos roca"]
+        phrases_en: ["deposit info", "rock data"]
+        keys: ["f1"]
+        label_es: "Info depósito"
+        label_en: "Deposit info"
+      - id: refuel_ship
+        phrases_es: ["repostar", "refuel"]
+        phrases_en: ["refuel ship"]
+        keys: ["f5"]
+        label_es: "Repostar"
+        label_en: "Refuel"
+      - id: lights_mining
+        phrases_es: ["luces minería", "ilumina"]
+        phrases_en: ["mining lights"]
+        keys: ["l"]
+        label_es: "Luces minería"
+        label_en: "Mining lights"
+      - id: cooling
+        phrases_es: ["refrigera", "cooling"]
+        phrases_en: ["cooling", "cool down"]
+        keys: ["alt+c"]
+        label_es: "Cooling"
+        label_en: "Cooling"
+      - id: emergency_shutdown
+        phrases_es: ["apaga emergencia", "shutdown laser"]
+        phrases_en: ["emergency shutdown"]
+        keys: ["alt+u"]
+        label_es: "Shutdown emergencia"
+        label_en: "Emergency shutdown"
+
+  # ============================================================
+  # QUANTUM — 12 comandos cuánticos
+  # ============================================================
+  - id: quantum
+    label_es: "Cuántico"
+    label_en: "Quantum"
+    description_es: "Viaje cuántico."
+    description_en: "Quantum travel."
+    commands:
+      - id: quantum_engage
+        phrases_es: ["engancha quantum", "engage quantum", "spool"]
+        phrases_en: ["engage quantum", "spool quantum"]
+        keys: ["b"]
+        label_es: "Engage quantum"
+        label_en: "Engage quantum"
+      - id: quantum_calibrate
+        phrases_es: ["calibra", "calibrate"]
+        phrases_en: ["calibrate", "calibrate quantum"]
+        keys: ["b"]
+        label_es: "Calibrar"
+        label_en: "Calibrate"
+      - id: quantum_abort
+        phrases_es: ["aborta quantum", "abort"]
+        phrases_en: ["abort quantum", "abort jump"]
+        keys: ["alt+b"]
+        label_es: "Abort quantum"
+        label_en: "Abort quantum"
+      - id: target_microtech
+        phrases_es: ["target microtech", "ve a microtech"]
+        phrases_en: ["target microtech"]
+        keys: ["t"]
+        label_es: "Target microTech"
+        label_en: "Target microTech"
+      - id: target_hurston
+        phrases_es: ["target hurston", "ve a hurston"]
+        phrases_en: ["target hurston"]
+        keys: ["t"]
+        label_es: "Target Hurston"
+        label_en: "Target Hurston"
+      - id: target_crusader
+        phrases_es: ["target crusader", "ve a crusader"]
+        phrases_en: ["target crusader"]
+        keys: ["t"]
+        label_es: "Target Crusader"
+        label_en: "Target Crusader"
+      - id: target_arccorp
+        phrases_es: ["target arccorp", "ve a arccorp"]
+        phrases_en: ["target arccorp"]
+        keys: ["t"]
+        label_es: "Target ArcCorp"
+        label_en: "Target ArcCorp"
+      - id: quantum_signature_scan
+        phrases_es: ["escanea quantum", "qt signature"]
+        phrases_en: ["scan quantum", "qt signature"]
+        keys: ["v"]
+        label_es: "QT signature"
+        label_en: "QT signature scan"
+      - id: report_distance
+        phrases_es: ["cuánto falta", "distancia"]
+        phrases_en: ["distance", "how far"]
+        keys: ["f1"]
+        label_es: "Distancia"
+        label_en: "Distance"
+      - id: quantum_drive_inspect
+        phrases_es: ["inspecciona quantum", "quantum drive"]
+        phrases_en: ["inspect quantum drive"]
+        keys: ["f1"]
+        label_es: "Quantum drive"
+        label_en: "Quantum drive"
+      - id: hold_position
+        phrases_es: ["mantén posición", "hold"]
+        phrases_en: ["hold position"]
+        keys: ["x"]
+        label_es: "Hold position"
+        label_en: "Hold position"
+      - id: jump_to_target
+        phrases_es: ["salta", "jump", "engancha y salta"]
+        phrases_en: ["jump now", "engage now"]
+        keys: ["b", "b"]
+        label_es: "Jump"
+        label_en: "Jump"
+
+  # ============================================================
+  # COMBAT — 24 comandos de combate avanzado
+  # ============================================================
+  - id: combat
+    label_es: "Combate"
+    label_en: "Combat"
+    description_es: "Combate espacial avanzado."
+    description_en: "Advanced space combat."
+    commands:
+      - id: missile_op_1
+        phrases_es: ["misil corto", "missile op 1"]
+        phrases_en: ["short range missile"]
+        keys: ["alt+1"]
+        label_es: "Misil corto"
+        label_en: "SR missile"
+      - id: missile_op_2
+        phrases_es: ["misil medio", "missile op 2"]
+        phrases_en: ["medium range missile"]
+        keys: ["alt+2"]
+        label_es: "Misil medio"
+        label_en: "MR missile"
+      - id: missile_op_3
+        phrases_es: ["misil largo", "missile op 3"]
+        phrases_en: ["long range missile"]
+        keys: ["alt+3"]
+        label_es: "Misil largo"
+        label_en: "LR missile"
+      - id: missile_op_4
+        phrases_es: ["misil torpedo", "torpedo"]
+        phrases_en: ["torpedo"]
+        keys: ["alt+4"]
+        label_es: "Torpedo"
+        label_en: "Torpedo"
+      - id: lock_target
+        phrases_es: ["bloquea", "lock"]
+        phrases_en: ["lock target", "lock on"]
+        keys: ["enter"]
+        label_es: "Lock"
+        label_en: "Lock"
+      - id: cycle_decoys
+        phrases_es: ["cambia decoy", "cycle decoy"]
+        phrases_en: ["cycle decoy"]
+        keys: ["g"]
+        label_es: "Cycle decoy"
+        label_en: "Cycle decoy"
+      - id: chaff
+        phrases_es: ["chaff", "señuelo"]
+        phrases_en: ["chaff"]
+        keys: ["g"]
+        label_es: "Chaff"
+        label_en: "Chaff"
+      - id: flare
+        phrases_es: ["flare", "bengala"]
+        phrases_en: ["flare"]
+        keys: ["g"]
+        label_es: "Flare"
+        label_en: "Flare"
+      - id: noise_emit
+        phrases_es: ["ruido", "noise"]
+        phrases_en: ["noise"]
+        keys: ["alt+g"]
+        label_es: "Noise"
+        label_en: "Noise"
+      - id: stealth_mode
+        phrases_es: ["sigilo", "stealth"]
+        phrases_en: ["stealth", "silent mode"]
+        keys: ["alt+u"]
+        label_es: "Sigilo"
+        label_en: "Stealth"
+      - id: pip_lead
+        phrases_es: ["pip lead", "delantero"]
+        phrases_en: ["pip lead", "lead reticle"]
+        keys: ["g"]
+        label_es: "PIP lead"
+        label_en: "PIP lead"
+      - id: pip_target
+        phrases_es: ["pip target", "reticle target"]
+        phrases_en: ["pip target"]
+        keys: ["alt+g"]
+        label_es: "PIP target"
+        label_en: "PIP target"
+      - id: shoot_through_shields
+        phrases_es: ["dispara a través", "ignora escudos"]
+        phrases_en: ["shoot through shields"]
+        keys: ["6"]
+        label_es: "Shoot-thru"
+        label_en: "Shoot-thru"
+      - id: ammo_swap
+        phrases_es: ["cambia munición", "swap ammo"]
+        phrases_en: ["swap ammo", "switch ammo"]
+        keys: ["alt+r"]
+        label_es: "Swap ammo"
+        label_en: "Swap ammo"
+      - id: shield_facing_front
+        phrases_es: ["escudo frente", "shield front"]
+        phrases_en: ["shield front"]
+        keys: ["up"]
+        label_es: "Escudo frente"
+        label_en: "Shield front"
+      - id: shield_facing_back
+        phrases_es: ["escudo atrás", "shield back"]
+        phrases_en: ["shield back"]
+        keys: ["down"]
+        label_es: "Escudo atrás"
+        label_en: "Shield back"
+      - id: shield_facing_left
+        phrases_es: ["escudo izquierda", "shield left"]
+        phrases_en: ["shield left"]
+        keys: ["left"]
+        label_es: "Escudo izq"
+        label_en: "Shield L"
+      - id: shield_facing_right
+        phrases_es: ["escudo derecha", "shield right"]
+        phrases_en: ["shield right"]
+        keys: ["right"]
+        label_es: "Escudo der"
+        label_en: "Shield R"
+      - id: shield_reset
+        phrases_es: ["escudo balanceado", "shield reset"]
+        phrases_en: ["shield reset", "balance shields"]
+        keys: ["home"]
+        label_es: "Shield reset"
+        label_en: "Shield reset"
+      - id: target_cycle_subtarget
+        phrases_es: ["sub objetivo", "cycle subtarget"]
+        phrases_en: ["cycle subtarget"]
+        keys: ["alt+t"]
+        label_es: "Subtarget"
+        label_en: "Subtarget"
+      - id: target_attackers
+        phrases_es: ["atacante", "quien me dispara"]
+        phrases_en: ["target attacker"]
+        keys: ["e"]
+        label_es: "Target atacante"
+        label_en: "Target attacker"
+      - id: target_focus
+        phrases_es: ["foco", "focus target"]
+        phrases_en: ["focus target"]
+        keys: ["alt+f"]
+        label_es: "Focus"
+        label_en: "Focus"
+      - id: weapon_overdrive
+        phrases_es: ["overdrive armas", "sobrecargar"]
+        phrases_en: ["weapon overdrive"]
+        keys: ["alt+w"]
+        label_es: "Overdrive"
+        label_en: "Overdrive"
+      - id: master_arm
+        phrases_es: ["arma master", "master arm"]
+        phrases_en: ["master arm"]
+        keys: ["alt+m"]
+        label_es: "Master arm"
+        label_en: "Master arm"
+
+  # ============================================================
+  # SALVAGE — 18 comandos de salvataje
+  # ============================================================
+  - id: salvage
+    label_es: "Salvataje"
+    label_en: "Salvage"
+    description_es: "Operación de salvataje (Reclaimer, Vulture)."
+    description_en: "Salvage operations (Reclaimer, Vulture)."
+    commands:
+      - id: salvage_mode
+        phrases_es: ["modo salvataje", "salvage"]
+        phrases_en: ["salvage mode"]
+        keys: ["m"]
+        label_es: "Modo salvataje"
+        label_en: "Salvage mode"
+      - id: hull_strip
+        phrases_es: ["pela casco", "hull strip"]
+        phrases_en: ["hull strip", "strip hull"]
+        keys: ["alt+f"]
+        label_es: "Hull strip (rebindear)"
+        label_en: "Hull strip (rebind)"
+        description_es: "SC usa mouse_left por default; bindealo a esta tecla en SC."
+        description_en: "SC uses mouse_left by default; bind this key in SC keybindings."
+      - id: head_config_a
+        phrases_es: ["cabezal a", "head a"]
+        phrases_en: ["head a", "config a"]
+        keys: ["alt+1"]
+        label_es: "Head A"
+        label_en: "Head A"
+      - id: head_config_b
+        phrases_es: ["cabezal b", "head b"]
+        phrases_en: ["head b", "config b"]
+        keys: ["alt+2"]
+        label_es: "Head B"
+        label_en: "Head B"
+      - id: structural_saw
+        phrases_es: ["sierra estructural", "saw"]
+        phrases_en: ["structural saw", "saw"]
+        keys: ["alt+3"]
+        label_es: "Sierra"
+        label_en: "Saw"
+      - id: fill_canister
+        phrases_es: ["llena canister", "fill"]
+        phrases_en: ["fill canister"]
+        keys: ["f"]
+        label_es: "Fill canister"
+        label_en: "Fill canister"
+      - id: swap_canister
+        phrases_es: ["cambia canister", "swap canister"]
+        phrases_en: ["swap canister"]
+        keys: ["alt+s"]
+        label_es: "Swap canister"
+        label_en: "Swap canister"
+      - id: dump_canister
+        phrases_es: ["tira canister", "dump canister"]
+        phrases_en: ["dump canister"]
+        keys: ["alt+d"]
+        label_es: "Dump canister"
+        label_en: "Dump canister"
+      - id: fracture_salvage
+        phrases_es: ["fractura", "fracture"]
+        phrases_en: ["fracture"]
+        keys: ["alt+4"]
+        label_es: "Fracture"
+        label_en: "Fracture"
+      - id: scan_damage
+        phrases_es: ["escanea daño", "scan hull"]
+        phrases_en: ["scan damage", "hull scan"]
+        keys: ["v"]
+        label_es: "Scan daño"
+        label_en: "Scan damage"
+      - id: repair_tool
+        phrases_es: ["repara", "repair tool"]
+        phrases_en: ["repair", "fix hull"]
+        keys: ["alt+5"]
+        label_es: "Repair"
+        label_en: "Repair"
+      - id: laser_focus_tight
+        phrases_es: ["foco cerrado", "tight focus"]
+        phrases_en: ["tight focus"]
+        keys: ["v"]
+        label_es: "Tight focus"
+        label_en: "Tight focus"
+      - id: laser_focus_wide
+        phrases_es: ["foco abierto", "wide focus"]
+        phrases_en: ["wide focus"]
+        keys: ["c"]
+        label_es: "Wide focus"
+        label_en: "Wide focus"
+      - id: power_salvage
+        phrases_es: ["potencia salvataje", "power salvage"]
+        phrases_en: ["power salvage"]
+        keys: ["p"]
+        label_es: "Power salvage"
+        label_en: "Power salvage"
+      - id: salvage_lights
+        phrases_es: ["luces salvataje", "salvage lights"]
+        phrases_en: ["salvage lights"]
+        keys: ["l"]
+        label_es: "Luces salv"
+        label_en: "Salv lights"
+      - id: deploy_arms
+        phrases_es: ["despliega brazos", "deploy arms"]
+        phrases_en: ["deploy arms"]
+        keys: ["k"]
+        label_es: "Deploy arms"
+        label_en: "Deploy arms"
+      - id: retract_arms
+        phrases_es: ["guarda brazos", "retract arms"]
+        phrases_en: ["retract arms"]
+        keys: ["alt+k"]
+        label_es: "Retract arms"
+        label_en: "Retract arms"
+      - id: salvage_report
+        phrases_es: ["info salvataje", "report salvage"]
+        phrases_en: ["salvage report"]
+        keys: ["f1"]
+        label_es: "Info salvataje"
+        label_en: "Salvage info"
+
+  # ============================================================
+  # REFUEL_CARGO — 14 comandos de combustible/carga
+  # ============================================================
+  - id: refuel_cargo
+    label_es: "Repostaje / Carga"
+    label_en: "Refuel / Cargo"
+    description_es: "Operaciones de cargo y repostaje."
+    description_en: "Cargo and refueling ops."
+    commands:
+      - id: tractor_beam
+        phrases_es: ["tractor", "rayo tractor"]
+        phrases_en: ["tractor beam"]
+        keys: ["m"]
+        label_es: "Tractor"
+        label_en: "Tractor"
+      - id: cargo_view
+        phrases_es: ["abre carga", "vista cargo"]
+        phrases_en: ["cargo view", "open cargo"]
+        keys: ["f1"]
+        label_es: "Cargo view"
+        label_en: "Cargo view"
+      - id: refresh_cargo
+        phrases_es: ["refresh cargo", "actualiza carga"]
+        phrases_en: ["refresh cargo"]
+        keys: ["f5"]
+        label_es: "Refresh cargo"
+        label_en: "Refresh cargo"
+      - id: dock_request
+        phrases_es: ["pide atraque", "dock"]
+        phrases_en: ["request dock", "dock"]
+        keys: ["alt+n"]
+        label_es: "Pedir atraque"
+        label_en: "Request dock"
+      - id: undock
+        phrases_es: ["desatraca", "undock"]
+        phrases_en: ["undock", "release dock"]
+        keys: ["alt+k"]
+        label_es: "Desatracar"
+        label_en: "Undock"
+      - id: fuel_transfer_start
+        phrases_es: ["transfiere combustible", "fuel transfer"]
+        phrases_en: ["fuel transfer", "start refuel"]
+        keys: ["f"]
+        label_es: "Transfer fuel"
+        label_en: "Fuel transfer"
+      - id: fuel_transfer_stop
+        phrases_es: ["para transfer", "stop transfer"]
+        phrases_en: ["stop transfer"]
+        keys: ["g"]
+        label_es: "Stop transfer"
+        label_en: "Stop transfer"
+      - id: hydrogen_fuel
+        phrases_es: ["hidrógeno", "fuel hidrógeno"]
+        phrases_en: ["hydrogen fuel"]
+        keys: ["1"]
+        label_es: "H2"
+        label_en: "H2"
+      - id: quantum_fuel
+        phrases_es: ["quantum fuel", "combustible cuántico"]
+        phrases_en: ["quantum fuel"]
+        keys: ["2"]
+        label_es: "QT fuel"
+        label_en: "QT fuel"
+      - id: connect_pad
+        phrases_es: ["conecta pad", "connect pad"]
+        phrases_en: ["connect pad"]
+        keys: ["c"]
+        label_es: "Connect pad"
+        label_en: "Connect pad"
+      - id: disconnect_pad
+        phrases_es: ["desconecta pad", "disconnect"]
+        phrases_en: ["disconnect pad"]
+        keys: ["v"]
+        label_es: "Disconnect"
+        label_en: "Disconnect"
+      - id: auto_pilot
+        phrases_es: ["piloto automático", "auto pilot"]
+        phrases_en: ["auto pilot"]
+        keys: ["alt+p"]
+        label_es: "Auto pilot"
+        label_en: "Auto pilot"
+      - id: report_fuel
+        phrases_es: ["estado combustible", "fuel status"]
+        phrases_en: ["fuel status"]
+        keys: ["f1"]
+        label_es: "Fuel status"
+        label_en: "Fuel status"
+      - id: jettison_all
+        phrases_es: ["tira toda la carga", "jettison all"]
+        phrases_en: ["jettison all cargo"]
+        keys: ["alt+j"]
+        label_es: "Jettison all"
+        label_en: "Jettison all"
+
+  # ============================================================
+  # VOICE_MISC — 12 comandos generales
+  # ============================================================
+  - id: voice_misc
+    label_es: "Misceláneos"
+    label_en: "Misc"
+    description_es: "Comandos generales sin contexto específico."
+    description_en: "General commands without specific context."
+    commands:
+      - id: yes_confirm
+        phrases_es: ["sí", "confirma", "acepta"]
+        phrases_en: ["yes", "confirm", "accept"]
+        keys: ["y"]
+        label_es: "Sí"
+        label_en: "Yes"
+      - id: no_cancel
+        phrases_es: ["no", "cancela"]
+        phrases_en: ["no", "cancel"]
+        keys: ["n"]
+        label_es: "No"
+        label_en: "No"
+      - id: continue_action
+        phrases_es: ["continuar", "continue"]
+        phrases_en: ["continue"]
+        keys: ["enter"]
+        label_es: "Continue"
+        label_en: "Continue"
+      - id: cancel_action
+        phrases_es: ["cancelar acción", "abort"]
+        phrases_en: ["abort", "cancel action"]
+        keys: ["esc"]
+        label_es: "Abort"
+        label_en: "Abort"
+      - id: pause_game
+        phrases_es: ["pausa", "menú"]
+        phrases_en: ["pause", "menu"]
+        keys: ["esc"]
+        label_es: "Pause"
+        label_en: "Pause"
+      - id: free_cam
+        phrases_es: ["cámara libre", "free cam"]
+        phrases_en: ["free cam"]
+        keys: ["f4"]
+        label_es: "Free cam"
+        label_en: "Free cam"
+      - id: third_person
+        phrases_es: ["tercera persona", "3rd person"]
+        phrases_en: ["third person", "3rd person"]
+        keys: ["f4"]
+        label_es: "3rd person"
+        label_en: "3rd person"
+      - id: first_person
+        phrases_es: ["primera persona", "1st person"]
+        phrases_en: ["first person", "1st person"]
+        keys: ["f4"]
+        label_es: "1st person"
+        label_en: "1st person"
+      - id: record_replay
+        phrases_es: ["graba replay", "record"]
+        phrases_en: ["record replay"]
+        keys: ["f10"]
+        label_es: "Record"
+        label_en: "Record"
+      - id: toggle_hud
+        phrases_es: ["esconde hud", "toggle hud"]
+        phrases_en: ["toggle hud", "hide hud"]
+        keys: ["alt+0"]
+        label_es: "Toggle HUD"
+        label_en: "Toggle HUD"
+      - id: zoom_in_hud
+        phrases_es: ["zoom in", "acerca hud"]
+        phrases_en: ["zoom in"]
+        keys: ["pageup"]
+        label_es: "Zoom in"
+        label_en: "Zoom in"
+      - id: zoom_out_hud
+        phrases_es: ["zoom out", "aleja hud"]
+        phrases_en: ["zoom out"]
+        keys: ["pagedown"]
+        label_es: "Zoom out"
+        label_en: "Zoom out"

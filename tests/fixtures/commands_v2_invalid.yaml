@@ -1,0 +1,9 @@
+version: 2
+settings:
+  active_profile: nonexistent
+profiles:
+  - id: flight
+    commands:
+      - id: c1
+        phrases_es: ["x"]
+        keys: ["a"]

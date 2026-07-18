@@ -1,0 +1,11 @@
+{
+  "tts.crusader_ack": "heading to Crusader",
+  "tts.engaging_quantum": "quantum drive engaged",
+  "tts.target_locked": "target locked",
+  "tts.landing_requested": "landing permission requested",
+  "tts.gear_down": "gear down",
+  "tts.gear_up": "gear up",
+  "tts.power_full": "full power",
+  "tts.weapons_hot": "weapons hot",
+  "tts.shields_up": "shields up"
+}
