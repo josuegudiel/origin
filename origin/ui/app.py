@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from ..engine.events import EventBus
@@ -37,6 +38,9 @@ def run_app(config_path: Path, dry_run: bool, start_minimized: bool) -> int:
     app = QApplication.instance() or QApplication(sys.argv)
     # Permite que `closeEvent` no termine la app (la cierra el tray).
     app.setQuitOnLastWindowClosed(False)
+    icon_path = Path(__file__).resolve().parent / "assets" / "icon.ico"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     paths = default_paths()
     lock = _single_instance_lock(paths.lock_file)
