@@ -149,6 +149,7 @@ class MainWindow(QWidget):
         self._bridge.profile_changed.connect(self._on_external_profile)
         self._bridge.config_reloaded.connect(self._on_config_reloaded)
         self._bridge.config_error.connect(self._on_config_error)
+        self._bridge.audio_error.connect(self._on_audio_error)
 
     # --------------------------------------------------------- header slots
 
@@ -195,6 +196,9 @@ class MainWindow(QWidget):
 
     def _on_config_error(self, err: str) -> None:
         self._show_banner("error", tr("banner.config_error", error=err))
+
+    def _on_audio_error(self, err: str) -> None:
+        self._show_banner("error", tr("banner.audio_error", error=err))
 
     def _show_banner(self, kind: str, msg: str, autohide_ms: int = 4000) -> None:
         self._banner.setProperty("kind", kind)

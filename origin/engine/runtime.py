@@ -35,6 +35,19 @@ from .tts import PiperTTS
 
 logger = logging.getLogger(__name__)
 
+# Nombre canónico de Origin → nombre del enum `Key` de pynput (usado para el PTT
+# y el hotkey de perfil). pynput usa snake_case y `esc`, no `escape`.
+PYNPUT_KEY_NAMES = {
+    "escape": "esc", "return": "enter",
+    "pageup": "page_up", "pagedown": "page_down",
+    "capslock": "caps_lock", "numlock": "num_lock",
+    "scrolllock": "scroll_lock", "printscreen": "print_screen",
+    # Puntuación: en pynput no son miembros de `Key`, van como KeyCode de un char.
+    "minus": "-", "equal": "=", "comma": ",", "period": ".",
+    "slash": "/", "backslash": "\\", "semicolon": ";", "apostrophe": "'",
+    "leftbracket": "[", "rightbracket": "]", "space": "space",
+}
+
 
 class State(str, Enum):
     LOADING = "loading_model"
@@ -87,6 +100,9 @@ class Orchestrator:
         self._settings = cf.settings
 
         self._recorder: Recorder | None = None
+        # False si el stream de mic no pudo abrirse en start(): el resto del
+        # engine sigue vivo, pero el flujo de PTT se ignora en vez de crashear.
+        self._audio_ready = False
         self._transcriber: Transcriber | None = None
         self._executor: ThreadPoolExecutor | None = None
         self._kb_listener: Any | None = None
@@ -101,6 +117,9 @@ class Orchestrator:
         self._script_executor: StepExecutor | None = None
         self._script_states: dict[str, StepExecutionState] = {}
         self._script_cancel = threading.Event()
+        # Latch de apagado: `_script_cancel` se limpia en cada dispatch, así que
+        # no sirve para saber si ya estamos cerrando.
+        self._shutting_down = False
 
         self._tts_phrases = {"es": _load_tts_phrases("es"), "en": _load_tts_phrases("en")}
 
@@ -123,7 +142,16 @@ class Orchestrator:
             max_record_seconds=self._settings.max_record_seconds,
             on_level=self._emit_audio_level,
         )
-        self._recorder.start_stream()
+        # El micrófono NO es fatal: sin él se pierde la voz, pero head tracking,
+        # gestos, HOTAS y la GUI siguen siendo usables. Un mic desconectado,
+        # deshabilitado o tomado en exclusiva por otra app no debe impedir arrancar.
+        try:
+            self._recorder.start_stream()
+            self._audio_ready = True
+        except Exception as e:
+            self._audio_ready = False
+            logger.warning("audio_stream_start_failed: %s", e)
+            self._bus.emit(EventType.AUDIO_ERROR, {"error": str(e)})
         self._transcriber = Transcriber(
             model_name=self._settings.whisper_model,
             device_preference=self._settings.whisper_device,
@@ -141,6 +169,7 @@ class Orchestrator:
 
     def shutdown(self) -> None:
         logger.info("orchestrator_shutdown")
+        self._shutting_down = True
         # Orden: cortar I/O externo (HOTAS, TTS, watchdog, keyboard) ANTES de
         # esperar al executor; setear cancel para abortar scripts en vuelo.
         self._script_cancel.set()
@@ -297,9 +326,7 @@ class Orchestrator:
                 self._hotas = None
             self._start_hotas_listener()
         if "headtrack" in changes:
-            # Cambios en cámara/opentrack/backend requieren reconstruir el tracker.
-            self._stop_head_tracker()
-            self._start_head_tracker()
+            self._apply_headtrack_change(old.headtrack, self._settings.headtrack)
         if "llm" in changes:
             self._build_llm_if_enabled()
         if "active_language" in changes and old.active_language != self._settings.active_language:
@@ -381,6 +408,19 @@ class Orchestrator:
     # ----- Keyboard hooks -----
 
     def _start_keyboard_listeners(self) -> None:
+        try:
+            self._start_keyboard_listeners_inner()
+        except Exception as e:
+            # Una tecla que pynput no resuelve no debe dejar la app inservible ni
+            # impedir el arranque: se avisa y el resto (gestos, HOTAS, GUI) vive.
+            logger.exception("keyboard_listeners_failed ptt=%s", self._settings.ptt_key)
+            self._bus.emit(
+                EventType.CONFIG_ERROR,
+                {"error": f"No se pudo registrar la tecla PTT "
+                          f"'{self._settings.ptt_key}': {e}"},
+            )
+
+    def _start_keyboard_listeners_inner(self) -> None:
         from pynput import keyboard as kb  # lazy
 
         ptt_key = self._parse_pynput_key(self._settings.ptt_key)
@@ -421,11 +461,15 @@ class Orchestrator:
         from pynput import keyboard as kb
 
         n = name.lower().strip()
-        n = {"esc": "escape", "return": "enter"}.get(n, n)
-        if hasattr(kb.Key, n):
-            return getattr(kb.Key, n)
+        # Nombres canónicos de Origin → nombres del enum `Key` de pynput. Sin
+        # esta tabla, elegir Esc/PageUp/coma como PTT lanzaba ValueError: la app
+        # quedaba SIN listeners y, como el ajuste ya se había persistido, el
+        # siguiente arranque también fallaba (solo se salía editando el YAML).
+        n = PYNPUT_KEY_NAMES.get(n, n)
         if len(n) == 1:
             return kb.KeyCode.from_char(n)
+        if hasattr(kb.Key, n):
+            return getattr(kb.Key, n)
         raise ValueError(f"PTT key '{name}' no soportada por pynput")
 
     @staticmethod
@@ -473,8 +517,32 @@ class Orchestrator:
             self._opentrack = OpenTrackSender(cfg.opentrack.host, cfg.opentrack.port)
             self._opentrack.open()
         self._gestures.reset()
-        self._head = HeadTracker(cfg, self._bus, on_pose=self._on_head_pose)
+        self._head = HeadTracker(
+            cfg, self._bus,
+            on_pose=self._on_head_pose,
+            on_centered=self._on_head_centered,
+        )
         self._head.start()
+
+    # Campos cuyo cambio obliga a reabrir la webcam / rehacer el socket.
+    _HEAD_RESTART_FIELDS = ("enabled", "camera_index", "backend", "fps_target", "opentrack")
+
+    def _apply_headtrack_change(self, old: Any, new: Any) -> None:
+        """Reinicia el tracker solo si hace falta.
+
+        Reconstruirlo cierra y reabre la webcam (segundos con cv2) y descarta la
+        calibración. Ajustar sensibilidad, deadzone, suavizado o los bindings de
+        gesto no lo necesita, y la UI persiste en cada pulsación de flecha.
+        """
+        needs_restart = any(
+            getattr(old, f) != getattr(new, f) for f in self._HEAD_RESTART_FIELDS
+        )
+        if needs_restart or self._head is None:
+            self._stop_head_tracker()
+            self._start_head_tracker()
+            return
+        self._head.update_settings(new)
+        logger.debug("headtrack_ajustado_en_caliente (sin reabrir cámara)")
 
     def _stop_head_tracker(self) -> None:
         if self._head:
@@ -490,10 +558,12 @@ class Orchestrator:
             self._head.calibrate()
 
     def _on_head_pose(self, pose: HeadPose) -> None:
-        # 1) OpenTrack: reenvía la pose 6DoF para el head-look del juego.
+        """Pose ya escalada por eje → OpenTrack (head-look del juego)."""
         if self._opentrack is not None:
             self._opentrack.send(*pose.as_tuple())
-        # 2) Gestos → comando (reusa el dispatch endurecido).
+
+    def _on_head_centered(self, pose: HeadPose) -> None:
+        """Pose centrada sin escalar → gestos (umbrales en grados reales)."""
         gesture = self._gestures.feed(pose, time.monotonic())
         if gesture is None:
             return
@@ -513,8 +583,24 @@ class Orchestrator:
             return
         prof = self._profiles.active()
         cmd = next((c for c in prof.commands if c.id == binding.command_id), None)
-        if cmd is not None:
-            self._dispatch_command(cmd, self._settings.active_language)
+        if cmd is None:
+            return
+        # Fuera del thread del tracker: `_dispatch_command` es síncrono y un step
+        # `wait` congelaría el loop de pose (OpenTrack dejaría de recibir y el
+        # head-look del juego se trabaría). Además hay que devolver el estado a
+        # READY — `_dispatch_command` deja RUNNING_SCRIPT y sin esto el motor
+        # quedaría ocupado para siempre, ignorando PTT y gestos posteriores.
+        lang = self._settings.active_language
+        if self._executor is not None:
+            fut = self._executor.submit(self._dispatch_command, cmd, lang)
+            fut.add_done_callback(self._on_process_done)
+        else:
+            try:
+                self._dispatch_command(cmd, lang)
+            finally:
+                with self._state_lock:
+                    if self._state not in (State.PAUSED, State.ERROR):
+                        self._set_state(State.READY)
 
     # ----- PTT flow -----
 
@@ -533,10 +619,17 @@ class Orchestrator:
                 return
             if self._ptt_pressed:
                 return
+            if not self._audio_ready or self._recorder is None:
+                # Sin micrófono no se puede grabar; avisamos y seguimos vivos.
+                logger.warning("ptt_press_sin_audio")
+                self._bus.emit(
+                    EventType.AUDIO_ERROR,
+                    {"error": "micrófono no disponible"},
+                )
+                return
             self._ptt_pressed = True
             self._capture_started_at = time.monotonic()
             self._capture_profile_id = self._profiles.active_id
-            assert self._recorder is not None
             self._recorder.begin_capture()
             self._set_state(State.RECORDING)
 
@@ -652,8 +745,13 @@ class Orchestrator:
             state = self._script_states.setdefault(
                 self._profiles.active_id, StepExecutionState()
             )
-        # Clear (no reasignar) — un shutdown() en flight que llamó .set() sobre el
-        # mismo Event mantiene su efecto, no se pierde por re-asignación.
+        # NO limpiar el cancel si el shutdown ya lo activó: hacerlo resucitaba un
+        # script abortado y seguía inyectando teclas en la ventana en foco
+        # mientras la app se cerraba (`executor.shutdown` espera, y
+        # `cancel_futures` no alcanza al future que ya está corriendo).
+        if self._shutting_down:
+            logger.info("dispatch_cancelado_por_shutdown cmd=%s", cmd.id)
+            return
         self._script_cancel.clear()
         self._set_state(State.RUNNING_SCRIPT)
         try:

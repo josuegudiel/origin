@@ -116,7 +116,17 @@ def run_app(config_path: Path, dry_run: bool, start_minimized: bool) -> int:
         # Sin tray: cerrar la ventana cierra la app.
         app.setQuitOnLastWindowClosed(True)
 
-    orch.start()
+    try:
+        orch.start()
+    except Exception as e:
+        # Arrancar el engine no debe tumbar la GUI: sin motor la ventana sigue
+        # abierta para que el usuario vea el error y pueda corregir Ajustes.
+        logger.exception("orchestrator_start_failed")
+        QMessageBox.warning(
+            None, "Origin",
+            f"El motor no arrancó completo:\n{e}\n\n"
+            "Revisá Ajustes (micrófono/modelo) y los Registros.",
+        )
 
     if start_minimized or orch.config.settings.start_minimized:
         main_window.hide()

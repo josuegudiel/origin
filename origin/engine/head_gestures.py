@@ -26,7 +26,10 @@ _TILT_ROLL_DEG = 18.0
 _LEAN_Z = 6.0
 _OSC_WINDOW_S = 0.9      # ventana para nod/shake (oscilación)
 _COOLDOWN_S = 1.0        # anti-ráfaga por gesto
-_HISTORY = 30
+# Debe cubrir _OSC_WINDOW_S al fps máximo permitido (120 → 108 muestras); si se
+# queda corto, la ventana real la recorta el deque y el mismo gesto se detecta
+# o no según el `fps_target` configurado.
+_HISTORY = 128
 
 
 class GestureDetector:

@@ -520,14 +520,29 @@ CommandsFileV2 = CommandsFileV3
 def load(path: Path) -> CommandsFileV3:
     """Carga commands.yaml. Migra v1→v3 / v2→v3 si hace falta y deja backup."""
     try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:
+        # Notepad guarda en ANSI por defecto en Windows: un acento en un `say`
+        # rompía la lectura con un error que NO era ConfigError, así que
+        # `reload_config` no lo capturaba y el usuario no veía ningún aviso.
+        raise ConfigError(
+            f"{path} no está en UTF-8 ({e}). Guardalo con codificación UTF-8 "
+            f"(en Notepad: Archivo → Guardar como → Codificación UTF-8)."
+        ) from e
+    except OSError as e:
+        raise ConfigError(f"no se pudo leer {path}: {e}") from e
+    try:
+        raw = yaml.safe_load(text)
     except yaml.YAMLError as e:
         raise ConfigError(f"YAML inválido en {path}: {e}") from e
     if not isinstance(raw, dict):
         raise ConfigError(f"{path}: el root debe ser un mapping")
     version = raw.get("version", 1)
     if version == 1:
-        migrated = _migrate_v1_to_v3(raw)
+        try:
+            migrated = _migrate_v1_to_v3(raw)
+        except Exception as e:
+            raise ConfigError(f"migración v1→v3 falló en {path}: {e}") from e
         _save_backup(path, "commands.v1.backup.yaml", raw)
         return migrated
     if version == 2:
@@ -612,6 +627,12 @@ def command_as_steps(cmd: Command, settings: Settings) -> list[Any]:
             out.append(WaitStep(ms=settings.inter_key_delay_ms))
         out.append(KeyStep(combo=combo))
     if settings.tts.enabled:
+        # `say_key` primero: es la frase parametrizada del banco (tts_phrases_*.json)
+        # y tiene prioridad sobre el texto libre. Se ignoraba por completo — un
+        # comando con `say_key` pronunciaba su label o se quedaba mudo.
+        if cmd.say_key:
+            out.append(SayKeyStep(key=cmd.say_key))
+            return out
         # Resolvemos el texto del say con un fallback explícito. Antes el SayStep
         # podía quedar con todos los campos None si el comando no tenía say_es,
         # say_en, ni label_es/en — el validator de SayStep lo rechazaba en runtime.
@@ -645,6 +666,12 @@ def save_atomic(cf: CommandsFileV3, path: Path) -> None:
                 allow_unicode=True,
                 default_flow_style=False,
             )
+            # fsync antes del rename: el rename es atómico frente a otros
+            # procesos, pero sin esto un corte de luz puede persistir el rename
+            # ANTES que los datos y dejar commands.yaml truncado o vacío — y los
+            # archivos v3 no tienen backup automático del que recuperarse.
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, path)
     except Exception:
         try:

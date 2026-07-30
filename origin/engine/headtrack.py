@@ -47,9 +47,15 @@ class HeadPose:
 # ============================================================================
 
 
-def apply_axis(raw: float, center: float, cfg: HeadAxis) -> float:
-    """Aplica calibración (resta center), deadzone, sensibilidad e invert a un eje."""
+def apply_axis(raw: float, center: float, cfg: HeadAxis, *, wrap: bool = False) -> float:
+    """Aplica calibración (resta center), deadzone, sensibilidad e invert a un eje.
+
+    `wrap=True` para ejes angulares: normaliza la diferencia a (-180, 180] para
+    que el cruce de ±180° no se lea como un giro gigante.
+    """
     v = raw - center
+    if wrap:
+        v = wrap_deg(v)
     if cfg.deadzone > 0.0:
         if abs(v) <= cfg.deadzone:
             v = 0.0
@@ -62,15 +68,69 @@ def apply_axis(raw: float, center: float, cfg: HeadAxis) -> float:
     return v
 
 
+def decode_euler(rmat: list[list[float]]) -> tuple[float, float, float]:
+    """Descompone la matriz de rotación de solvePnP en (yaw, pitch, roll) grados.
+
+    Convención de cámara de OpenCV (X derecha, Y abajo, Z hacia la escena):
+      - rotación sobre X → cabecear  (pitch)
+      - rotación sobre Y → girar     (yaw)
+      - rotación sobre Z → inclinar  (roll)
+
+    Función pura (recibe la matriz como listas) para poder testear el decode sin
+    cv2 ni webcam — es el punto donde históricamente se permutaron los ejes.
+    """
+    import math  # noqa: PLC0415
+
+    sy = (rmat[0][0] ** 2 + rmat[1][0] ** 2) ** 0.5
+    if sy < 1e-6:
+        # Gimbal lock (mirando casi de perfil): roll y yaw no son separables.
+        pitch = math.degrees(math.atan2(-rmat[1][2], rmat[1][1]))
+        yaw = math.degrees(math.atan2(-rmat[2][0], sy))
+        roll = 0.0
+    else:
+        pitch = math.degrees(math.atan2(rmat[2][1], rmat[2][2]))
+        yaw = math.degrees(math.atan2(-rmat[2][0], sy))
+        roll = math.degrees(math.atan2(rmat[1][0], rmat[0][0]))
+    return yaw, pitch, roll
+
+
+def wrap_deg(v: float) -> float:
+    """Normaliza un ángulo a (-180, 180].
+
+    La cara en reposo queda cerca de ±180° en pitch (el modelo 3D es Y-arriba y
+    la imagen Y-abajo), así que restar el centro de calibración puede dar 358°
+    en vez de -2°. Sin esto, un micro-movimiento parece un giro enorme.
+    """
+    return (v + 180.0) % 360.0 - 180.0
+
+
 def process_pose(raw: HeadPose, center: HeadPose, cfg: HeadTrackSettings) -> HeadPose:
     """Convierte una pose cruda en la pose final aplicando la config por eje."""
     return HeadPose(
-        yaw=apply_axis(raw.yaw, center.yaw, cfg.yaw),
-        pitch=apply_axis(raw.pitch, center.pitch, cfg.pitch),
-        roll=apply_axis(raw.roll, center.roll, cfg.roll),
+        yaw=apply_axis(raw.yaw, center.yaw, cfg.yaw, wrap=True),
+        pitch=apply_axis(raw.pitch, center.pitch, cfg.pitch, wrap=True),
+        roll=apply_axis(raw.roll, center.roll, cfg.roll, wrap=True),
         x=apply_axis(raw.x, center.x, cfg.pos_x),
         y=apply_axis(raw.y, center.y, cfg.pos_y),
         z=apply_axis(raw.z, center.z, cfg.pos_z),
+    )
+
+
+def center_pose(raw: HeadPose, center: HeadPose) -> HeadPose:
+    """Pose centrada en la calibración, SIN sensibilidad/invert/deadzone.
+
+    Es la que alimenta el detector de gestos: sus umbrales están en grados
+    reales, así que aplicarles la escala del head-look los desvirtuaría (con
+    `sensitivity=4` un micro-movimiento parecería un gesto, con `invert` se
+    intercambiarían tilt_left/tilt_right, y con `sensitivity=0` no habría gesto).
+    """
+    return HeadPose(
+        yaw=wrap_deg(raw.yaw - center.yaw),
+        pitch=wrap_deg(raw.pitch - center.pitch),
+        roll=wrap_deg(raw.roll - center.roll),
+        x=raw.x - center.x,
+        y=raw.y - center.y,
+        z=raw.z - center.z,
     )
 
 
@@ -191,11 +251,9 @@ class MediaPipeBackend:
         if not ok2:
             return None
         rmat, _ = self._cv2.Rodrigues(rvec)
-        sy = float((rmat[0, 0] ** 2 + rmat[1, 0] ** 2) ** 0.5)
-        import math  # noqa: PLC0415
-        pitch = math.degrees(math.atan2(-rmat[2, 0], sy))
-        yaw = math.degrees(math.atan2(rmat[1, 0], rmat[0, 0]))
-        roll = math.degrees(math.atan2(rmat[2, 1], rmat[2, 2]))
+        yaw, pitch, roll = decode_euler(
+            [[float(rmat[r, c]) for c in range(3)] for r in range(3)]
+        )
         tx, ty, tz = float(tvec[0]), float(tvec[1]), float(tvec[2])
         # Normalizamos traslación a un rango manejable para OpenTrack.
         return HeadPose(yaw=yaw, pitch=pitch, roll=roll,
@@ -236,10 +294,13 @@ class HeadTracker:
         bus: EventBus,
         on_pose: Callable[[HeadPose], None] | None = None,
         backend: PoseBackend | None = None,
+        on_centered: Callable[[HeadPose], None] | None = None,
     ) -> None:
         self._settings = settings
         self._bus = bus
         self._on_pose = on_pose
+        # Pose centrada sin escalar — para gestos (ver `center_pose`).
+        self._on_centered = on_centered
         self._backend = backend or make_backend(settings.backend)
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
@@ -255,7 +316,9 @@ class HeadTracker:
 
     def calibrate(self) -> None:
         """Marca la pose cruda actual como el centro (posición neutral)."""
-        self._calibrate_next = True
+        # Bajo lock: sin él, un clic entre el read y el reset del worker se pierde.
+        with self._lock:
+            self._calibrate_next = True
 
     def start(self) -> None:
         if self._thread is not None:
@@ -273,10 +336,20 @@ class HeadTracker:
         self._thread = None
         if t is not None and t.is_alive():
             t.join(timeout=2.0)
-        try:
-            self._backend.close()
-        except Exception:
-            logger.exception("head_backend_close_failed")
+            if t.is_alive():
+                # El worker sigue bloqueado (típico: `cap.read()` con una webcam
+                # colgada). NO cerramos el backend acá: cv2 no es thread-safe y
+                # liberarlo bajo los pies del worker es undefined behavior. El
+                # propio `_loop` lo cierra en su `finally` cuando logre salir.
+                logger.warning("head_worker_no_termino_a_tiempo; cierre diferido al worker")
+                self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "stopped"})
+                return
+        if t is None:
+            # Nunca arrancó: cerrar acá es inofensivo e idempotente.
+            try:
+                self._backend.close()
+            except Exception:
+                logger.exception("head_backend_close_failed")
         self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "stopped"})
 
     def _loop(self) -> None:
@@ -285,21 +358,33 @@ class HeadTracker:
         except Exception as e:
             logger.warning("head_backend_open_failed: %s", e)
             self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "error", "error": str(e)})
+            # `start()` volvería a ser un no-op silencioso si dejáramos el thread
+            # muerto colgado en `_thread`; liberarlo permite reintentar.
+            self._thread = None
             return
-        self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "running"})
-        period = 1.0 / max(1, self._settings.fps_target)
-        while not self._stop.is_set():
-            t0 = time.monotonic()
+        # El worker es dueño del backend: lo cierra él, para que `stop()` nunca
+        # lo libere mientras este thread sigue dentro de `read_pose()`.
+        try:
+            self._bus.emit(EventType.HEAD_TRACK_STATE, {"state": "running"})
+            while not self._stop.is_set():
+                t0 = time.monotonic()
+                with self._lock:
+                    period = 1.0 / max(1, self._settings.fps_target)
+                try:
+                    raw = self._backend.read_pose()
+                except Exception:
+                    logger.exception("head_read_pose_failed")
+                    raw = None
+                if raw is not None:
+                    self._handle_raw(raw)
+                dt = time.monotonic() - t0
+                if dt < period:
+                    self._stop.wait(period - dt)
+        finally:
             try:
-                raw = self._backend.read_pose()
+                self._backend.close()
             except Exception:
-                logger.exception("head_read_pose_failed")
-                raw = None
-            if raw is not None:
-                self._handle_raw(raw)
-            dt = time.monotonic() - t0
-            if dt < period:
-                self._stop.wait(period - dt)
+                logger.exception("head_backend_close_failed")
 
     def _handle_raw(self, raw: HeadPose) -> None:
         with self._lock:
@@ -312,6 +397,7 @@ class HeadTracker:
             final = process_pose(raw, self._center, settings)
             self._smoothed = smooth_pose(self._smoothed, final, settings.smoothing)
             out = self._smoothed
+            centered = center_pose(raw, self._center)
         self._bus.emit(
             EventType.HEAD_POSE,
             {"yaw": out.yaw, "pitch": out.pitch, "roll": out.roll,
@@ -322,6 +408,11 @@ class HeadTracker:
                 self._on_pose(out)
             except Exception:
                 logger.exception("head_on_pose_failed")
+        if self._on_centered is not None:
+            try:
+                self._on_centered(centered)
+            except Exception:
+                logger.exception("head_on_centered_failed")
 
     @staticmethod
     def list_cameras(max_index: int = 8) -> list[int]:
