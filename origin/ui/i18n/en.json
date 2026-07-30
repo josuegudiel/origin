@@ -1,7 +1,6 @@
 {
   "app.title": "Origin",
   "app.subtitle": "Voice assistant for Star Citizen",
-
   "state.loading_model": "Loading model…",
   "state.ready": "Ready",
   "state.paused": "Paused",
@@ -12,12 +11,10 @@
   "state.speaking": "Speaking…",
   "state.resolving_intent": "Resolving intent…",
   "state.error": "Error",
-
   "header.language": "Language",
   "header.profile": "Profile",
   "header.pause": "Pause",
   "header.resume": "Resume",
-
   "sidebar.dashboard": "Dashboard",
   "sidebar.commands": "Commands",
   "sidebar.profiles": "Profiles",
@@ -25,7 +22,6 @@
   "sidebar.settings": "Settings",
   "sidebar.logs": "Logs",
   "sidebar.about": "About",
-
   "headtrack.general": "Head tracking (webcam)",
   "headtrack.enabled": "Enable head tracking",
   "headtrack.camera": "Camera",
@@ -50,7 +46,6 @@
   "headtrack.gesture": "Gesture",
   "headtrack.command_id": "Command ID",
   "headtrack.gesture_on": "On",
-
   "dashboard.engine_state": "Engine state",
   "dashboard.mic_level": "Mic level",
   "dashboard.recent": "Recent transcriptions",
@@ -60,7 +55,6 @@
   "dashboard.latency.match": "Matching",
   "dashboard.latency.total": "Total",
   "dashboard.no_match": "No match",
-
   "commands.title": "Profile commands",
   "commands.profile_label": "Profile:",
   "commands.add": "Add",
@@ -82,7 +76,6 @@
   "commands.error.no_phrases": "Must have at least one phrase (ES or EN)",
   "commands.error.invalid_keys": "Invalid keys: {err}",
   "commands.error.empty_keys": "Keys cannot be empty",
-
   "profiles.title": "Profiles",
   "profiles.new": "New profile",
   "profiles.duplicate": "Duplicate",
@@ -92,7 +85,6 @@
   "profiles.commands_count": "{n} commands",
   "profiles.error.at_least_one": "At least one profile must exist",
   "profiles.confirm_delete": "Delete profile '{id}'? All its commands will be lost.",
-
   "settings.title": "Settings",
   "settings.section.hotkeys": "Hotkeys",
   "settings.ptt_key": "PTT key",
@@ -129,20 +121,17 @@
   "settings.open_logs_folder": "Open logs folder",
   "settings.save": "Save",
   "settings.saved": "Saved",
-
   "logs.title": "Live logs",
   "logs.filter_level": "Level",
   "logs.search": "Search",
   "logs.copy_all": "Copy all",
   "logs.clear_view": "Clear view",
   "logs.open_folder": "Open folder",
-
   "about.title": "About Origin",
   "about.version": "Version",
   "about.license": "License",
   "about.credits": "Credits",
   "about.credits.body": "Built with faster-whisper, PySide6, rapidfuzz, pydirectinput and pynput.",
-
   "tray.show_dashboard": "Show dashboard",
   "tray.pause": "Pause listening",
   "tray.resume": "Resume listening",
@@ -153,19 +142,17 @@
   "tray.still_running.title": "Origin is still running",
   "tray.still_running.body": "The app was minimized to the system tray. Click the icon to bring back the dashboard.",
   "tray.tooltip_template": "Origin — {profile} · {lang} · {state}",
-
   "common.ok": "OK",
   "common.cancel": "Cancel",
   "common.save": "Save",
   "common.error": "Error",
   "common.warning": "Warning",
   "common.confirm": "Confirm",
-
   "banner.config_error": "Config error: {error}",
+  "banner.audio_error": "Microphone unavailable ({error}). The rest of Origin (head tracking, gestures, HOTAS) keeps working.",
   "banner.config_reloaded": "Config reloaded",
   "banner.v1_migrated": "Your commands.yaml v1 was migrated to v2 (backup in commands.v1.backup.yaml).",
   "banner.maybe_wrong_language": "Wrong language? The transcription doesn't seem to match the active language.",
-
   "settings.section.tts": "Text-to-Speech (TTS)",
   "settings.tts.enabled": "Enable TTS",
   "settings.tts.voice_es": "Spanish voice",
@@ -177,7 +164,6 @@
   "settings.tts.test": "Test",
   "settings.tts.refresh_voices": "Refresh voices",
   "settings.tts.no_voices": "(no voices detected — install Piper)",
-
   "settings.section.hotas": "HOTAS / joystick PTT",
   "settings.hotas.enabled": "Enable HOTAS PTT",
   "settings.hotas.binding": "Bound button",
@@ -187,7 +173,6 @@
   "settings.hotas.no_devices": "(no devices detected)",
   "settings.hotas.refresh": "Refresh",
   "settings.hotas.poll_hz": "Polling frequency (Hz)",
-
   "settings.section.llm": "LLM fallback (Ollama)",
   "settings.llm.enabled": "Enable LLM fallback",
   "settings.llm.url": "Ollama base URL",
@@ -197,7 +182,6 @@
   "settings.llm.temperature": "Temperature",
   "settings.llm.test": "Test connection",
   "settings.llm.preflight_ok": "Connection OK",
-
   "script.edit": "Edit script",
   "script.title": "Script editor",
   "script.add_step": "Add step",

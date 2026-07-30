@@ -22,6 +22,7 @@ class EngineBridge(QObject):
     language_changed = Signal(str)
     config_reloaded = Signal()
     config_error = Signal(str)
+    audio_error = Signal(str)
     log_event = Signal(dict)
     # ===== v0.3 =====
     tts_started = Signal(dict)
@@ -52,6 +53,7 @@ class EngineBridge(QObject):
             sub(EventType.LANGUAGE_CHANGED, self._on_lang),
             sub(EventType.CONFIG_RELOADED, self._on_reloaded),
             sub(EventType.CONFIG_ERROR, self._on_cfg_err),
+            sub(EventType.AUDIO_ERROR, lambda p: self.audio_error.emit(p.get("error", ""))),
             sub(EventType.LOG, self._on_log),
             sub(EventType.TTS_STARTED, lambda p: self.tts_started.emit(dict(p))),
             sub(EventType.TTS_DONE, lambda p: self.tts_done.emit(dict(p))),

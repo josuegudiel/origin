@@ -22,6 +22,8 @@ OutputBaseFilename=OriginSetup-{#AppVersion}-small-v3
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\origin\ui\assets\icon.ico
+UninstallDisplayIcon={app}\{#AppExeName}
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 

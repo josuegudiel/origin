@@ -34,14 +34,20 @@ class OpenTrackSender:
         self._host = host
         self._port = port
         self._sock: socket.socket | None = None
+        self._closed = False
 
     def open(self) -> None:
+        self._closed = False
         if self._sock is not None:
             return
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         logger.info("opentrack_sender_open host=%s port=%d", self._host, self._port)
 
     def close(self) -> None:
+        # `_closed` hace el cierre definitivo: si un worker de tracking sigue
+        # vivo tras el shutdown, su `send()` no debe reabrir el socket (FD
+        # filtrado + poses saliendo después de apagar).
+        self._closed = True
         if self._sock is not None:
             try:
                 self._sock.close()
@@ -58,6 +64,8 @@ class OpenTrackSender:
     ) -> bool:
         """Envía una pose. Devuelve True si se mandó, False si falló (no raisa —
         un error de red no debe tumbar el loop de tracking)."""
+        if self._closed:
+            return False
         if self._sock is None:
             self.open()
         assert self._sock is not None

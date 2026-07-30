@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from ..engine.events import EventBus
@@ -37,6 +38,9 @@ def run_app(config_path: Path, dry_run: bool, start_minimized: bool) -> int:
     app = QApplication.instance() or QApplication(sys.argv)
     # Permite que `closeEvent` no termine la app (la cierra el tray).
     app.setQuitOnLastWindowClosed(False)
+    icon_path = Path(__file__).resolve().parent / "assets" / "icon.ico"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     paths = default_paths()
     lock = _single_instance_lock(paths.lock_file)
@@ -112,7 +116,17 @@ def run_app(config_path: Path, dry_run: bool, start_minimized: bool) -> int:
         # Sin tray: cerrar la ventana cierra la app.
         app.setQuitOnLastWindowClosed(True)
 
-    orch.start()
+    try:
+        orch.start()
+    except Exception as e:
+        # Arrancar el engine no debe tumbar la GUI: sin motor la ventana sigue
+        # abierta para que el usuario vea el error y pueda corregir Ajustes.
+        logger.exception("orchestrator_start_failed")
+        QMessageBox.warning(
+            None, "Origin",
+            f"El motor no arrancó completo:\n{e}\n\n"
+            "Revisá Ajustes (micrófono/modelo) y los Registros.",
+        )
 
     if start_minimized or orch.config.settings.start_minimized:
         main_window.hide()

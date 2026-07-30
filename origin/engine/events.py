@@ -23,6 +23,7 @@ class EventType(str, Enum):
     LANGUAGE_CHANGED = "language_changed"
     CONFIG_RELOADED = "config_reloaded"
     CONFIG_ERROR = "config_error"
+    AUDIO_ERROR = "audio_error"
     LOG = "log"
     # ===== v0.3 =====
     TTS_STARTED = "tts_started"

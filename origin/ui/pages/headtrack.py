@@ -209,7 +209,7 @@ class HeadTrackPage(QWidget):
 
     # ------------------------------------------------------------------ populate
 
-    def _populate(self) -> None:
+    def _populate(self, refresh_cams: bool = True) -> None:
         s = self._orch.config.settings.headtrack
         for w in (self._chk_enabled, self._sp_smoothing, self._sp_fps, self._chk_ot,
                   self._ed_ot_host, self._sp_ot_port):
@@ -235,7 +235,10 @@ class HeadTrackPage(QWidget):
             ws["dz"].setValue(axis.deadzone)
             for w in ws.values():
                 w.blockSignals(False)
-        self._refresh_cameras()
+        if refresh_cams:
+            # Sondear cámaras abre hasta 8 VideoCapture en el hilo de UI: solo al
+            # construir la página, no en cada recarga de config.
+            self._refresh_cameras()
         self._reload_gestures()
 
     def _refresh_cameras(self) -> None:
@@ -308,6 +311,10 @@ class HeadTrackPage(QWidget):
         self._bridge.head_pose.connect(self._on_pose)
         self._bridge.head_track_state.connect(self._on_state)
         self._bridge.head_gesture.connect(self._on_gesture)
+        # Sin esto la tabla queda desactualizada tras un reload externo del YAML
+        # y el siguiente cambio del usuario pisa los bindings recién cargados
+        # (`_save_gestures` reconstruye la lista COMPLETA desde el widget).
+        self._bridge.config_reloaded.connect(lambda: self._populate(refresh_cams=False))
         # Guardar gestos cuando el usuario edita la celda de command_id.
         self._tbl_gestures.itemChanged.connect(lambda _i: self._save_gestures())
 

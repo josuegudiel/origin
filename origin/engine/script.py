@@ -81,6 +81,16 @@ def _resolve_say_text(s: SayStep, lang: str) -> str | None:
     return s.text_es or s.text_en or s.text
 
 
+class _Budget:
+    """Presupuesto anti-runaway de UNA ejecución (pasos + tiempo de pared)."""
+
+    __slots__ = ("steps_run", "deadline")
+
+    def __init__(self, deadline: float) -> None:
+        self.steps_run = 0
+        self.deadline = deadline
+
+
 class StepExecutor:
     """Bloqueante. Una instancia por orchestrator. Re-entrante via vars per-profile."""
 
@@ -105,8 +115,6 @@ class StepExecutor:
         self._settings = settings_provider
         self._i18n_say = i18n_say
         self._dry_run = dry_run
-        self._steps_run = 0
-        self._deadline = 0.0
 
     def execute(
         self,
@@ -118,10 +126,13 @@ class StepExecutor:
     ) -> None:
         if not steps:
             return
-        self._steps_run = 0
-        self._deadline = time.monotonic() + MAX_SCRIPT_WALL_SECONDS
+        # Presupuesto LOCAL a esta ejecución. Como estado de instancia lo
+        # compartían las ejecuciones concurrentes (worker de STT, botón Test de
+        # la UI, gestos de cabeza): se repartían los 100 pasos y los scripts
+        # salían truncados — media secuencia de teclas enviada al juego.
+        budget = _Budget(time.monotonic() + MAX_SCRIPT_WALL_SECONDS)
         labels = self._index_labels(steps)
-        self._run_block(steps, labels, state, lang, cancel)
+        self._run_block(steps, labels, state, lang, cancel, budget)
 
     # ------------------------------------------------------------------ internals
 
@@ -141,25 +152,26 @@ class StepExecutor:
         state: StepExecutionState,
         lang: str,
         cancel: threading.Event,
+        budget: _Budget,
     ) -> None:
         pc = 0
         while pc < len(steps):
             if cancel.is_set():
                 logger.info("script_cancelled at_pc=%d", pc)
                 return
-            if self._steps_run >= MAX_STEPS_PER_COMMAND:
+            if budget.steps_run >= MAX_STEPS_PER_COMMAND:
                 logger.warning(
                     "script_step_limit_reached limit=%d", MAX_STEPS_PER_COMMAND
                 )
                 return
-            if time.monotonic() >= self._deadline:
+            if time.monotonic() >= budget.deadline:
                 logger.warning(
                     "script_wall_limit_reached limit=%.0fs", MAX_SCRIPT_WALL_SECONDS
                 )
                 return
             step = steps[pc]
-            self._steps_run += 1
-            new_pc = self._exec_one(step, pc, labels, state, lang, cancel)
+            budget.steps_run += 1
+            new_pc = self._exec_one(step, pc, labels, state, lang, cancel, budget)
             self._bus.emit(
                 EventType.SCRIPT_STEP_EXECUTED,
                 {"type": getattr(step, "type", "unknown"), "pc": pc},
@@ -174,6 +186,7 @@ class StepExecutor:
         state: StepExecutionState,
         lang: str,
         cancel: threading.Event,
+        budget: _Budget,
     ) -> int | None:
         if isinstance(step, KeyStep):
             if step.hold_ms is not None:
@@ -210,15 +223,16 @@ class StepExecutor:
                 logger.warning("script_bad_cond cond=%r err=%s", step.cond, e)
                 return None
             branch = step.then if branch_true else (step.else_ or [])
-            self._run_block(list(branch), self._index_labels(list(branch)), state, lang, cancel)
+            blk = list(branch)
+            self._run_block(blk, self._index_labels(blk), state, lang, cancel, budget)
             return None
 
         if isinstance(step, RepeatStep):
             inner_labels = self._index_labels(list(step.steps))
             for _ in range(step.times):
-                if cancel.is_set() or self._steps_run >= MAX_STEPS_PER_COMMAND:
+                if cancel.is_set() or budget.steps_run >= MAX_STEPS_PER_COMMAND:
                     return None
-                self._run_block(list(step.steps), inner_labels, state, lang, cancel)
+                self._run_block(list(step.steps), inner_labels, state, lang, cancel, budget)
             return None
 
         if isinstance(step, GotoStep):

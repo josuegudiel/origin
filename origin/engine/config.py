@@ -127,12 +127,27 @@ class OpenTrackSettings(BaseModel):
     @field_validator("host")
     @classmethod
     def _host_safe(cls, v: str) -> str:
-        # SEGURIDAD: la pose de cabeza sale por UDP a host:port. Restringir a
-        # loopback/LAN por default evita mandar el stream a un host arbitrario
-        # de Internet desde un perfil compartido. Se acepta hostname o IP.
-        if not v or "/" in v or "\\" in v or ":" in v:
+        # SEGURIDAD: la pose de cabeza sale por UDP a host:port. Solo se aceptan
+        # destinos de loopback/LAN — IP privada/link-local, 'localhost', nombre
+        # de máquina sin puntos (ej. 'gaming-pc') o mDNS '*.local'/'*.lan' — para
+        # que una config editada/importada no pueda exfiltrar el stream a un
+        # host arbitrario de Internet.
+        import ipaddress
+
+        host = v.lower()
+        if not host or any(ch in host for ch in "/\\:@ "):
             raise ValueError(f"host inválido: '{v}'")
-        return v
+        try:
+            ip = ipaddress.ip_address(host)
+        except ValueError:
+            if host == "localhost" or "." not in host or host.endswith((".local", ".lan")):
+                return host
+            raise ValueError(
+                f"host '{v}' parece un dominio público — usá loopback o una IP/nombre de LAN"
+            ) from None
+        if not (ip.is_loopback or ip.is_private or ip.is_link_local):
+            raise ValueError(f"host '{v}' es una IP pública — solo loopback o LAN")
+        return host
 
 
 class GestureBinding(BaseModel):
@@ -505,14 +520,29 @@ CommandsFileV2 = CommandsFileV3
 def load(path: Path) -> CommandsFileV3:
     """Carga commands.yaml. Migra v1→v3 / v2→v3 si hace falta y deja backup."""
     try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:
+        # Notepad guarda en ANSI por defecto en Windows: un acento en un `say`
+        # rompía la lectura con un error que NO era ConfigError, así que
+        # `reload_config` no lo capturaba y el usuario no veía ningún aviso.
+        raise ConfigError(
+            f"{path} no está en UTF-8 ({e}). Guardalo con codificación UTF-8 "
+            f"(en Notepad: Archivo → Guardar como → Codificación UTF-8)."
+        ) from e
+    except OSError as e:
+        raise ConfigError(f"no se pudo leer {path}: {e}") from e
+    try:
+        raw = yaml.safe_load(text)
     except yaml.YAMLError as e:
         raise ConfigError(f"YAML inválido en {path}: {e}") from e
     if not isinstance(raw, dict):
         raise ConfigError(f"{path}: el root debe ser un mapping")
     version = raw.get("version", 1)
     if version == 1:
-        migrated = _migrate_v1_to_v3(raw)
+        try:
+            migrated = _migrate_v1_to_v3(raw)
+        except Exception as e:
+            raise ConfigError(f"migración v1→v3 falló en {path}: {e}") from e
         _save_backup(path, "commands.v1.backup.yaml", raw)
         return migrated
     if version == 2:
@@ -597,6 +627,12 @@ def command_as_steps(cmd: Command, settings: Settings) -> list[Any]:
             out.append(WaitStep(ms=settings.inter_key_delay_ms))
         out.append(KeyStep(combo=combo))
     if settings.tts.enabled:
+        # `say_key` primero: es la frase parametrizada del banco (tts_phrases_*.json)
+        # y tiene prioridad sobre el texto libre. Se ignoraba por completo — un
+        # comando con `say_key` pronunciaba su label o se quedaba mudo.
+        if cmd.say_key:
+            out.append(SayKeyStep(key=cmd.say_key))
+            return out
         # Resolvemos el texto del say con un fallback explícito. Antes el SayStep
         # podía quedar con todos los campos None si el comando no tenía say_es,
         # say_en, ni label_es/en — el validator de SayStep lo rechazaba en runtime.
@@ -630,6 +666,12 @@ def save_atomic(cf: CommandsFileV3, path: Path) -> None:
                 allow_unicode=True,
                 default_flow_style=False,
             )
+            # fsync antes del rename: el rename es atómico frente a otros
+            # procesos, pero sin esto un corte de luz puede persistir el rename
+            # ANTES que los datos y dejar commands.yaml truncado o vacío — y los
+            # archivos v3 no tienen backup automático del que recuperarse.
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, path)
     except Exception:
         try:

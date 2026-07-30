@@ -97,6 +97,9 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     icon=str(root / "origin" / "ui" / "assets" / "icon.ico") if (root / "origin" / "ui" / "assets" / "icon.ico").exists() else None,
+    # Metadatos de versión de Windows: los .exe de PyInstaller sin recurso de
+    # versión disparan más heurísticas de AV/SmartScreen (no reemplaza firmar).
+    version=str(root / "installer" / "version_info.txt"),
 )
 
 coll = COLLECT(

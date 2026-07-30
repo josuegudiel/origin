@@ -58,6 +58,27 @@ _SPECIAL_KEYS = {
 }
 VALID_KEYS = _LETTERS | _DIGITS | _FKEYS | _SPECIAL_KEYS | MODIFIER_SET
 
+# Nombre canónico de Origin → nombre que entiende pydirectinput. Sin esta tabla
+# `pdi.press("leftbracket")` hace `return` mudo: el comando se marcaba como
+# ejecutado, el log decía OK y el juego no recibía NADA. Son binds habituales
+# en Star Citizen, así que el fallo silencioso era especialmente engañoso.
+PDI_KEY_NAMES = {
+    "minus": "-", "equal": "=", "comma": ",", "period": ".",
+    "slash": "/", "backslash": "\\", "semicolon": ";", "apostrophe": "'",
+    "leftbracket": "[", "rightbracket": "]",
+    "escape": "esc", "printscreen": "printscreen",
+}
+
+
+def to_pdi_name(key: str) -> str:
+    """Traduce una tecla canónica al nombre de pydirectinput."""
+    return PDI_KEY_NAMES.get(key, key)
+
+
+def _pdi_supports(pdi: Any, key: str) -> bool:
+    mapping = getattr(pdi, "KEYBOARD_MAPPING", None)
+    return True if mapping is None else mapping.get(key) is not None
+
 
 class KeyError_(ValueError):
     """Error parseando o validando una combinación de teclas."""
@@ -148,13 +169,27 @@ def execute(combos: list[str], inter_key_delay_ms: int = 30, dry_run: bool = Fal
     for i, (mods, key) in enumerate(parsed):
         if i > 0 and inter_key_delay_ms > 0:
             time.sleep(inter_key_delay_ms / 1000.0)
-        for m in mods:
-            pdi.keyDown(m)
+        pdi_key = to_pdi_name(key)
+        if not _pdi_supports(pdi, pdi_key):
+            # Antes esto era un no-op mudo: el usuario veía "comando ejecutado"
+            # y el juego no recibía nada. Ahora al menos queda en los registros.
+            logger.warning("tecla_no_soportada_por_backend key=%s (combo ignorado)", key)
+            continue
+        pressed: list[str] = []
         try:
-            pdi.press(key)
+            # keyDown DENTRO del try: pydirectinput puede lanzar FailSafeException
+            # entre modificador y modificador, y un ctrl/shift/alt que quedó
+            # presionado a nivel de SO es peor que el fallo original.
+            for m in mods:
+                pdi.keyDown(to_pdi_name(m))
+                pressed.append(m)
+            pdi.press(pdi_key)
         finally:
-            for m in reversed(mods):
-                pdi.keyUp(m)
+            for m in reversed(pressed):
+                try:
+                    pdi.keyUp(to_pdi_name(m))
+                except Exception:
+                    logger.exception("keyup_failed key=%s", m)
 
 
 def execute_held(combo: str, hold_ms: int, dry_run: bool = False) -> None:
@@ -170,12 +205,23 @@ def execute_held(combo: str, hold_ms: int, dry_run: bool = False) -> None:
     if pdi is None:
         logger.warning("pydirectinput no disponible — saltando held key=%s", combo)
         return
-    for m in mods:
-        pdi.keyDown(m)
-    pdi.keyDown(key)
+    pdi_key = to_pdi_name(key)
+    if not _pdi_supports(pdi, pdi_key):
+        logger.warning("tecla_no_soportada_por_backend key=%s (held ignorado)", key)
+        return
+    # Todo dentro del try: si `keyDown` lanza (FailSafeException de
+    # pydirectinput) a mitad del combo, hay que soltar lo ya presionado.
+    pressed: list[str] = []
     try:
+        for m in mods:
+            pdi.keyDown(to_pdi_name(m))
+            pressed.append(m)
+        pdi.keyDown(pdi_key)
+        pressed.append(key)
         time.sleep(max(0, hold_ms) / 1000.0)
     finally:
-        pdi.keyUp(key)
-        for m in reversed(mods):
-            pdi.keyUp(m)
+        for k in reversed(pressed):
+            try:
+                pdi.keyUp(to_pdi_name(k))
+            except Exception:
+                logger.exception("keyup_failed key=%s", k)
